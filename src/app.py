@@ -1,0 +1,234 @@
+from flask import Flask,jsonify,request
+#from flask_mysqldb import MySQL
+from config import config
+from werkzeug.security import generate_password_hash
+import pymysql
+#from src.database.db import get_connection
+
+#Models
+from models.ModelUser import ModelUser
+from models.Security import Security
+
+#Entities
+from models.entities.User import User
+
+app=Flask(__name__) #este parametro servira para saber si estamos ejecutando este archivo como principal
+
+#conexion=MySQL(app)
+conexion=pymysql.connect(
+            host='b5xjtjc7ljbwo9pqw9ds-mysql.services.clever-cloud.com',
+            user='ugxkrton3nwnoe1m',
+            password='CnqN1HBzgsypNbZkldpd',
+            db='b5xjtjc7ljbwo9pqw9ds'            
+        )
+
+@app.route('/login', methods=['POST','GET'])
+def login():
+
+    username = request.form['username']
+    password = request.form['password']
+    user = User(0,username,password,None,None)
+    logged_user=ModelUser.login(conexion,user)
+    if logged_user!=None:
+        if logged_user.pasword:
+            encoded_token = Security.generate_token(logged_user)
+            data = {'id':logged_user.idUser,'username':logged_user.userName,'email':logged_user.email,'IsAdmin':logged_user.IsAdmin}
+            return jsonify({'success': True, 'token': encoded_token,'mensaje':"loged",'data':data})
+        else:
+            return jsonify({'success': False,'mensaje':"Invalid password"})
+    else:
+        return jsonify({'success': False,'mensaje':"User not found"})
+
+@app.route('/singin', methods=['POST'])   
+def singin():     
+    try:
+        cursor=conexion.cursor()
+        sql="""INSERT INTO User (userName, pasword, email, IsAdmin)
+          VALUES ('{0}', '{1}', '{2}', '{3}')""".format(
+              request.json['userName'],
+              generate_password_hash(request.json['password']),
+              request.json['email'],
+              request.json['IsAdmin'])
+        cursor.execute(sql)
+        conexion.commit() #confirma la accionde inserción
+        cursor.close()
+        return jsonify({'mensaje':"Usuario registrado"})
+    except Exception as ex:
+        print("ex")
+        print(ex)
+        error_message = str(ex)
+        if 'Duplicate entry' in error_message and "for key 'User.userName_UNIQUE'" in error_message:
+            cursor.close()
+            return jsonify({'mensaje':"Nombre de usuario ya registrado",'error':str(ex)}),500
+        if 'Duplicate entry' in error_message and "for key 'User.email_UNIQUE'" in error_message:
+            cursor.close()
+            return jsonify({'mensaje':"Email ya registrado",'error':str(ex)}),500
+        else:
+            cursor.close()
+            return jsonify({'mensaje':"error",'error':str(ex)}),500
+
+@app.route('/usuario',methods=['GET'])
+def usuario():
+    try:
+        cursor=conexion.cursor()
+        sql="SELECT * FROM User"
+        cursor.execute(sql)
+        datos=cursor.fetchall()
+        usuarios=[]
+        for fila in datos:
+            usuario={'id':fila[0],'userName':fila[1],'pass':fila[2],'email':fila[3],'IsAdmin':fila[4]}
+            usuarios.append(usuario)
+        cursor.close()
+        return jsonify({'usuarios':usuarios,'mensaje':"usuario"})
+    except Exception as ex:
+        cursor.close()
+        return jsonify({'mensaje':"error"})
+#BUSCA TODOS LOS CLIENTES DE UN USUARIO
+@app.route('/clientes/<codigo>',methods=['GET'])
+def obtenerClientes(codigo):
+    try:
+        cursor=conexion.cursor()
+        sql="SELECT idClientes, nombre, direccion, nif, cif, telef, precio FROM Clientes WHERE iduser = '{0}'".format(codigo)
+        cursor.execute(sql)
+        print("cliente")
+        datos=cursor.fetchall()
+        clientes=[]
+        if datos != None:
+            for fila in datos:
+                datoscliente = {'idCliente':fila[0],'nombre':fila[1],'direccion':fila[2],'nif':fila[3],'cif':fila[4],'telef':fila[5],'precio':fila[6]}
+                cliente = {'cliente':datoscliente['nombre'],'datos':datoscliente}
+                conjuntoCliente = {cliente['cliente']:datoscliente}
+                clientes.append(datoscliente)
+            cursor.close()
+            return jsonify({'clientes': clientes, 'mensaje': "Clientes encontrados."})
+        else:
+            cursor.close()
+            return jsonify({'mensaje': "Clientes no encontrados."})
+    except Exception as ex:
+        print(ex)
+        return "error"
+#BUSCA UN CLIENTE
+@app.route('/cliente/<codigo>',methods=['GET'])
+def buscarCliente(codigo):
+    try:
+        cursor=conexion.cursor()
+        sql="SELECT nombre, direccion, nif, cif, telef, precio FROM Clientes WHERE idClientes = '{0}'".format(codigo)
+        cursor.execute(sql)
+        print("cliente")
+        datos=cursor.fetchone()
+        if datos != None:
+            cliente={'nombre':datos[0],'direccion':datos[1],'nif':datos[2],'cif':datos[3],'telef':datos[4],'precio':datos[5]}
+            cursor.close()
+            return jsonify({'cliente': cliente, 'mensaje': "Cliente encontrado."})
+        else:
+            cursor.close()
+            return jsonify({'mensaje': "Cliente no encontrado."})
+    except Exception as ex:
+        print(ex)
+        return "error"
+
+@app.route('/cliente',methods=['POST','GET'])
+def crear_cliente():
+    try:
+        cursor=conexion.cursor()
+        sql="SELECT * FROM Clientes WHERE nombre = '{0}'".format(
+            request.form['nombre']
+        )
+        print(sql)
+        cursor.execute(sql)
+        print("0k")
+        datos=cursor.fetchone()
+        print(datos)
+        if datos == None:
+            sql="""INSERT INTO Clientes (iduser, nombre, direccion, nif, cif, telef, precio)
+            VALUES ('{0}', '{1}', '{2}', '{3}', '{4}','{5}', '{6}')""".format(
+                request.form['iduser'],
+                request.form['nombre'],
+                request.form['direccion'],
+                request.form['nif'],
+                request.form['cif'],
+                request.form['telef'],
+                request.form['precio'])
+            cursor.execute(sql)
+            conexion.commit() #confirma la accionde inserción
+            cursor.close()
+            return jsonify({'success': True,'mensaje':"Cliente registrado"})
+        else:
+            cursor.close()
+            return jsonify({'success': False,'mensaje': "Cliente ya existe."})
+    except Exception as ex:
+        print(ex)
+        return "error"
+
+@app.route('/datos/<codigo>',methods=['GET'])
+def obtenerDatos(codigo):
+    try:
+        cursor = conexion.cursor()
+        sql="SELECT idDatos, name, dirección, nif, cif, telefono, email FROM Datos WHERE userid = '{0}'".format(codigo)
+        cursor.execute(sql)
+        print("Datos")
+        datos=cursor.fetchone()
+        if datos != None:
+            Datos={'id':datos[0],'nombre':datos[1],'direccion':datos[2],'nif':datos[3],'cif':datos[4],'telefono':datos[5],'email':datos[6]}
+            cursor.close()
+            return jsonify({'success': True,'Datos': Datos, 'mensaje': "Datos encontrados."})
+        else:
+            cursor.close()
+            return jsonify({'success': False,'mensaje': "Datos no encontrados."})
+    except Exception as ex:
+        print(ex)
+        return "error"
+@app.route('/guardarDatos',methods=['POST'])
+def guardarDatos():
+    try:
+        cursor=conexion.cursor()
+        sql="SELECT * FROM Datos WHERE userid = '{0}'".format(
+            request.form['userid']
+        )
+        print(sql)
+        cursor.execute(sql)
+        print("0k")
+        datos=cursor.fetchone()
+        print(datos)
+        if datos == None:
+            sql="""INSERT INTO Datos (userid, name, dirección, nif, cif, telefono, email)
+            VALUES ('{0}', '{1}', '{2}', '{3}', '{4}','{5}', '{6}')""".format(
+                request.form['userid'],
+                request.form['name'],
+                request.form['direccion'],
+                request.form['nif'],
+                request.form['cif'],
+                request.form['telefono'],
+                request.form['email'])
+            cursor.execute(sql)
+            conexion.commit() #confirma la accionde inserción
+            cursor.close()
+            return jsonify({'success': True,'mensaje':"Datos Guardados"})
+        else:
+            #si ya hay datos, actualizamos la información
+            sql="""UPDATE Datos
+                SET name = '{1}', dirección = '{2}', nif = '{3}', cif = '{4}', telefono = '{5}', email = '{6}'
+                WHERE userid = '{0}'""".format(
+                    request.form['userid'],
+                    request.form['name'],
+                    request.form['direccion'],
+                    request.form['nif'],
+                    request.form['cif'],
+                    request.form['telefono'],
+                    request.form['email'])
+            cursor.execute(sql)
+            conexion.commit()
+            cursor.close()
+            return jsonify({'success': True,'mensaje': "Datos actualizados."})
+    except Exception as ex:
+        print(ex)
+        return "error"
+def pagina_no_encontrada(error):
+    return "<h1>La página no existe</h1>", 404
+
+if __name__=='__main__':
+    app.config.from_object(config['development'])#pasamos la configuracion desde un objeto
+    app.register_error_handler(404,pagina_no_encontrada)#para manejar errores
+    app.register_error_handler(409,None)
+    app.register_error_handler(500,None)
+    app.run()
