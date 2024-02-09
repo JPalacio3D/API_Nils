@@ -151,8 +151,10 @@ def crear_cliente():
                 request.form['precio'])
             cursor.execute(sql)
             conexion.commit() #confirma la accionde inserción
+            cursor.execute("SELECT LAST_INSERT_ID()")
+            idCliente = cursor.fetchone()[0]
             cursor.close()
-            return jsonify({'success': True,'mensaje':"Cliente registrado"})
+            return jsonify({'success': True,'mensaje':"Cliente registrado",'id':idCliente})
         else:
             cursor.close()
             return jsonify({'success': False,'mensaje': "Cliente ya existe."})
