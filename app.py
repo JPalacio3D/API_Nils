@@ -96,8 +96,6 @@ def obtenerClientes(codigo):
         if datos != None:
             for fila in datos:
                 datoscliente = {'idCliente':fila[0],'nombre':fila[1],'direccion':fila[2],'nif':fila[3],'cif':fila[4],'telef':fila[5],'precio':fila[6]}
-                cliente = {'cliente':datoscliente['nombre'],'datos':datoscliente}
-                conjuntoCliente = {cliente['cliente']:datoscliente}
                 clientes.append(datoscliente)
             cursor.close()
             return jsonify({'clientes': clientes, 'mensaje': "Clientes encontrados."})
@@ -282,6 +280,29 @@ def saveImpactos():
         conexion.commit()
         cursor.close()
         return jsonify({'success': True,'mensaje':"Impactos guardados"})        
+    except Exception as ex:
+        print(ex)
+        return "error"
+    
+@app.route('/marcasCoche',methods=['GET'])
+def marcas():
+    try:
+        cursor=conexion.cursor()
+        #CREAMOS "LA FICHA" DE PERITAJE
+        sql="SELECT * FROM DBcoches"
+        cursor.execute(sql)
+        print("coches")
+        datos=cursor.fetchall()
+        coches=[]
+        if datos != None:
+            for fila in datos:
+                datoscoche = {'idCoche':fila[0],'Marca':fila[1]}
+                coches.append(datoscoche)
+            cursor.close()
+            return jsonify({'clientes': coches, 'mensaje': "Coches encontrados."})
+        else:
+            cursor.close()
+            return jsonify({'mensaje': "Clientes no encontrados."})    
     except Exception as ex:
         print(ex)
         return "error"
