@@ -223,6 +223,66 @@ def guardarDatos():
     except Exception as ex:
         print(ex)
         return "error"
+@app.route('/save',methods=['POST'])
+def save():
+    try:
+        cursor=conexion.cursor()
+        #CREAMOS "LA FICHA" DE PERITAJE
+        sql="""INSERT INTO peritajes (iduserP, idcliente, fecha_creacion) 
+        VALUES ('{0}', '{1}', '{2}')""".format(
+            request.form['iduser'],
+            request.form['idcliente'],
+            request.form['fecha'])
+        cursor.execute(sql)
+        conexion.commit()
+        # Obtienes el ID del último registro insertado
+        cursor.execute("SELECT LAST_INSERT_ID()")
+        id_peritaje = cursor.fetchone()[0]
+        cursor.close()
+        #GUARDAMOS LOS DATOS DEL COCHE
+        
+        sql="""INSERT INTO coches_peritaje (idperitaje, idcoche, modelo, matricula, version, fecha_matriculacion, N_chasis, kms, color, aseguradora
+        VALUES ('{0}', '{1}', '{2}', '{3}', '{4}','{5}', '{6}', '{7}', '{8}','{9}')""".format(
+            id_peritaje,
+            request.form['idcoche'],
+            request.form['modelo'],
+            request.form['matricula'],
+            request.form['version'],
+            request.form['fecha_matriculacion'],
+            request.form['N_chasis'],
+            request.form['kms'],
+            request.form['color'],
+            request.form['aseguradora'])
+        cursor.execute(sql)
+        conexion.commit()
+        cursor.close()
+        return jsonify({'success': True,'mensaje':"ficha y coche creados",'idPeritaje':id_peritaje})       
+    except Exception as ex:
+        print(ex)
+        return "error"
+@app.route('/saveImpactos',methods=['POST'])
+def saveImpactos():
+    try:
+        cursor=conexion.cursor()
+        #CREAMOS "LA FICHA" DE PERITAJE
+        sql="""INSERT INTO Impactos (peritajesId, zona, peq, med, grd, mgrd, reparacion, material, posibledpp) 
+        VALUES ('{0}', '{1}', '{2}', '{3}', '{4}','{5}', '{6}', '{7}', '{8}')""".format(
+            request.form['idperitaje'],
+            request.form['zona'],
+            request.form['peq'],
+            request.form['med'],
+            request.form['grd'],
+            request.form['mgrd'],
+            request.form['reparacion'],
+            request.form['material'],
+            request.form['posibledpp'])
+        cursor.execute(sql)
+        conexion.commit()
+        cursor.close()
+        return jsonify({'success': True,'mensaje':"Impactos guardados"})        
+    except Exception as ex:
+        print(ex)
+        return "error"
 def pagina_no_encontrada(error):
     return "<h1>La página no existe</h1>", 404
 
