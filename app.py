@@ -3,6 +3,7 @@ from flask import Flask,jsonify,request
 from config import config
 from werkzeug.security import generate_password_hash
 import pymysql
+import datetime
 #from src.database.db import get_connection
 
 #Models
@@ -232,7 +233,7 @@ def save():
         VALUES ('{0}', '{1}', '{2}')""".format(
             request.form['iduser'],
             request.form['idcliente'],
-            request.form['fecha'])
+            datetime.date.now())
         cursor.execute(sql)
         conexion.commit()
         # Obtienes el ID del último registro insertado
