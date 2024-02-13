@@ -299,10 +299,10 @@ def marcas():
                 datoscoche = {'idCoche':fila[0],'Marca':fila[1]}
                 coches.append(datoscoche)
             cursor.close()
-            return jsonify({'clientes': coches, 'mensaje': "Coches encontrados."})
+            return jsonify({'success':True, 'coches': coches, 'mensaje': "Coches encontrados."})
         else:
             cursor.close()
-            return jsonify({'mensaje': "Clientes no encontrados."})    
+            return jsonify({'success':False,'mensaje': "Coches no encontrados."})    
     except Exception as ex:
         print(ex)
         return "error"
