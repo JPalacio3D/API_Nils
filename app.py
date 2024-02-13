@@ -233,7 +233,7 @@ def save():
         VALUES ('{0}', '{1}', '{2}')""".format(
             request.form['iduser'],
             request.form['idcliente'],
-            datetime.date)
+            request.form['fecha'])
         cursor.execute(sql)
         conexion.commit()
         # Obtienes el ID del último registro insertado
