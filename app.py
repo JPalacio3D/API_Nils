@@ -294,7 +294,7 @@ def update(code):
         )
         cursor.execute(sql)
         conexion.commit()
-        sql="""UPDATE coches_peritaje 
+        sql="""UPDATE coches_peritaje SET
         idchoche = '{0}', modelo = '{1}', matricula = '{2}', version = '{3}', fecha_matriculacion = '{4}', N_chasis = '{5}', kms = '{6}', color = '{7}', aseguradora = '{8}'
         WHERE idperitaje = '{9}'""".format(
             request.form['idcoche'],
