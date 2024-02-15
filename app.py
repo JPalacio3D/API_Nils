@@ -321,7 +321,7 @@ def updateImpactos(code):
         cursor=conexion.cursor()
         sql="""UPDATE Impactos SET
         zona = '{0}', peq = '{1}', med = '{2}', grd = '{3}', mgrd = '{4}', reparacion = '{5}', material = '{6}', posibledpp = '{7}'
-        WHERE idperitaje = '{8}'""".format(
+        WHERE peritajesId = '{8}'""".format(
             request.form['zona'],
             request.form['peq'],
             request.form['med'],
