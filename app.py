@@ -241,7 +241,7 @@ def save():
         id_peritaje = cursor.fetchone()[0]
         #GUARDAMOS LOS DATOS DEL COCHE
         
-        sql="""INSERT INTO coches_peritaje (idperitaje, idcoche, modelo, matricula, version, fecha_matriculacion, N_chasis, kms, color, aseguradora
+        sql="""INSERT INTO coches_peritaje (idperitaje, idcoche, modelo, matricula, version, fecha_matriculacion, N_chasis, kms, color, aseguradora)
         VALUES ('{0}', '{1}', '{2}', '{3}', '{4}','{5}', '{6}', '{7}', '{8}','{9}')""".format(
             id_peritaje,
             request.form['idcoche'],
