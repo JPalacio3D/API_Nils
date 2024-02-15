@@ -284,6 +284,62 @@ def saveImpactos():
         print(ex)
         return "error"
     
+@app.route('/update/<code>',methods=['POST'])
+def update(code):
+    try:
+        cursor=conexion.cursor()
+        sql="UPDATE peritajes SET fecha_creación = '{0}' WHERE idperitajes = '{1}' ".format(
+            request.form['fecha'],
+            code
+        )
+        cursor.execute(sql)
+        conexion.commit()
+        sql="""UPDATE coches_peritaje 
+        idchoche = '{0}', modelo = '{1}', matricula = '{2}', version = '{3}', fecha_matriculacion = '{4}', N_chasis = '{5}', kms = '{6}', color = '{7}', aseguradora = '{8}'
+        WHERE idperitaje = '{9}'""".format(
+            request.form['idcoche'],
+            request.form['modelo'],
+            request.form['matricula'],
+            request.form['version'],
+            request.form['fecha_matriculacion'],
+            request.form['N_chasis'],
+            request.form['kms'],
+            request.form['color'],
+            request.form['aseguradora'],
+            code
+        )
+        cursor.execute(sql)
+        conexion.commit()
+        cursor.close()
+        return jsonify({'success':True,'mensaje':"fecha y coche actualizados"})
+    except Exception as ex:
+        print(ex)
+        return "error"
+@app.route('/updateImpactos/<code>',methods=['POST'])
+def updateImpactos(code):
+    try:
+        cursor=conexion.cursor()
+        sql="""UPDATE Impactos
+        zona = '{0}', peq = '{1}', med = '{2}', grd = '{3}', mgrd = '{4}', reparacion = '{5}', material = '{6}', posibledpp = '{7}'
+        WHERE idperitaje = '{8}'""".format(
+            request.form['zona'],
+            request.form['peq'],
+            request.form['med'],
+            request.form['grd'],
+            request.form['mgrd'],
+            request.form['reparacion'],
+            request.form['material'],
+            request.form['posibledpp'],
+            code
+        )
+        cursor.execute(sql)
+        conexion.commit()
+        cursor.close()
+        return jsonify({'success':True,'mensaje':"impactos actualizados"})
+    except Exception as ex:
+        print(ex)
+        return "error"
+    
 @app.route('/marcasCoche',methods=['GET'])
 def marcas():
     try:
