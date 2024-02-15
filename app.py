@@ -288,7 +288,7 @@ def saveImpactos():
 def update(code):
     try:
         cursor=conexion.cursor()
-        sql="UPDATE peritajes SET fecha_creación = '{0}' WHERE idperitajes = '{1}' ".format(
+        sql="UPDATE peritajes SET fecha_creacion = '{0}' WHERE idperitajes = '{1}' ".format(
             request.form['fecha'],
             code
         )
