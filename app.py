@@ -239,7 +239,6 @@ def save():
         # Obtienes el ID del último registro insertado
         cursor.execute("SELECT LAST_INSERT_ID()")
         id_peritaje = cursor.fetchone()[0]
-        cursor.close()
         #GUARDAMOS LOS DATOS DEL COCHE
         
         sql="""INSERT INTO coches_peritaje (idperitaje, idcoche, modelo, matricula, version, fecha_matriculacion, N_chasis, kms, color, aseguradora
