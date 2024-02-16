@@ -264,7 +264,7 @@ def save():
 def saveImpactos():
     try:
         cursor=conexion.cursor()
-        sql="SELECT * FROM Impactos WHERE zona = '{1}' AND peritajesId = '{0}".format(
+        sql="SELECT * FROM Impactos WHERE zona = '{1}' AND peritajesId = '{0}'".format(
             request.form['idperitaje'],
             request.form['zona']
         )
