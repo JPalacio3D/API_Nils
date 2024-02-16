@@ -264,18 +264,41 @@ def save():
 def saveImpactos():
     try:
         cursor=conexion.cursor()
-        #CREAMOS "LA FICHA" DE PERITAJE
-        sql="""INSERT INTO Impactos (peritajesId, zona, peq, med, grd, mgrd, reparacion, material, posibledpp) 
-        VALUES ('{0}', '{1}', '{2}', '{3}', '{4}','{5}', '{6}', '{7}', '{8}')""".format(
+        sql="SELECT * FROM Impactos WHERE zona = '{1}' AND peritajesId = '{0}".format(
             request.form['idperitaje'],
-            request.form['zona'],
-            request.form['peq'],
-            request.form['med'],
-            request.form['grd'],
-            request.form['mgrd'],
-            request.form['reparacion'],
-            request.form['material'],
-            request.form['posibledpp'])
+            request.form['zona']
+        )
+        cursor.execute(sql)
+        datos=cursor.fetchone()
+        if datos == None:
+        #CREAMOS "LA FICHA" DE PERITAJE
+            sql="""INSERT INTO Impactos (peritajesId, zona, peq, med, grd, mgrd, reparacion, material, posibledpp) 
+            VALUES ('{0}', '{1}', '{2}', '{3}', '{4}','{5}', '{6}', '{7}', '{8}')""".format(
+                request.form['idperitaje'],
+                request.form['zona'],
+                request.form['peq'],
+                request.form['med'],
+                request.form['grd'],
+                request.form['mgrd'],
+                request.form['reparacion'],
+                request.form['material'],
+                request.form['posibledpp'])
+            cursor.execute(sql)
+            conexion.commit()
+        else:
+            sql="""UPDATE Impactos SET
+            zona = '{0}', peq = '{1}', med = '{2}', grd = '{3}', mgrd = '{4}', reparacion = '{5}', material = '{6}', posibledpp = '{7}'
+            WHERE peritajesId = '{8}'""".format(
+                request.form['zona'],
+                request.form['peq'],
+                request.form['med'],
+                request.form['grd'],
+                request.form['mgrd'],
+                request.form['reparacion'],
+                request.form['material'],
+                request.form['posibledpp'],
+                request.form['idperitaje']
+            )
         cursor.execute(sql)
         conexion.commit()
         cursor.close()
