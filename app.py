@@ -270,6 +270,7 @@ def saveImpactos():
         )
         cursor.execute(sql)
         datos=cursor.fetchone()
+        print(datos)
         if datos == None:
             #CREAMOS "LA FICHA" DE PERITAJE
             sql="""INSERT INTO Impactos (peritajesId, zona, peq, med, grd, mgrd, reparacion, material, posibledpp) 
@@ -285,17 +286,16 @@ def saveImpactos():
                 request.form['posibledpp'])
         else:
             sql="""UPDATE Impactos SET
-            zona = '{0}', peq = '{1}', med = '{2}', grd = '{3}', mgrd = '{4}', reparacion = '{5}', material = '{6}', posibledpp = '{7}'
-            WHERE peritajesId = '{8}'""".format(
-                request.form['zona'],
+            peq = '{1}', med = '{2}', grd = '{3}', mgrd = '{4}', reparacion = '{5}', material = '{6}', posibledpp = '{7}'
+            WHERE peritajesId = '{0}'""".format(
+                request.form['idperitaje'],
                 request.form['peq'],
                 request.form['med'],
                 request.form['grd'],
                 request.form['mgrd'],
                 request.form['reparacion'],
                 request.form['material'],
-                request.form['posibledpp'],
-                request.form['idperitaje']
+                request.form['posibledpp']
             )
         cursor.execute(sql)
         conexion.commit()
