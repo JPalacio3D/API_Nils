@@ -264,7 +264,7 @@ def save():
 def saveImpactos():
     try:
         cursor=conexion.cursor()
-        sql="SELECT * FROM Impactos WHERE zona = '{1}' AND peritajesId = '{0}'".format(
+        sql="SELECT idImpactos FROM Impactos WHERE zona = '{1}' AND peritajesId = '{0}'".format(
             request.form['idperitaje'],
             request.form['zona']
         )
@@ -287,7 +287,7 @@ def saveImpactos():
         else:
             sql="""UPDATE Impactos SET
             peq = '{1}', med = '{2}', grd = '{3}', mgrd = '{4}', reparacion = '{5}', material = '{6}', posibledpp = '{7}'
-            WHERE peritajesId = '{0}'""".format(
+            WHERE peritajesId = '{0}' AND idImpactos = '{8}'""".format(
                 request.form['idperitaje'],
                 request.form['peq'],
                 request.form['med'],
@@ -295,7 +295,8 @@ def saveImpactos():
                 request.form['mgrd'],
                 request.form['reparacion'],
                 request.form['material'],
-                request.form['posibledpp']
+                request.form['posibledpp'],
+                datos[0]
             )
         cursor.execute(sql)
         conexion.commit()
