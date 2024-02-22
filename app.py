@@ -355,9 +355,9 @@ def load(code):
                 sql_cliente = "SELECT nombre FROM Clientes WHERE idClientes = '{0}'".format(idCliente)
                 cursor.execute(sql_cliente)
                 nombre_cliente = cursor.fetchone()
-                id["Cliente"] = nombre_cliente
+                id['Cliente'] = nombre_cliente
             cursor.close()
-            return jsonify({'success':True,'cliente':peritajes["Cliente"],'datos':peritajes})
+            return jsonify({'success':True,'cliente':peritajes['Cliente'],'datos':peritajes})
         else:
             cursor.close()
             return jsonify({'success':False,'mensaje':"Ningun peritaje guardado"})
