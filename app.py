@@ -343,14 +343,24 @@ def load(code):
         cursor=conexion.cursor()
         sql="SELECT * FROM peritajes WHERE iduserP = '{0}'".format(code)
         cursor.execute(sql)
-        datosPeritaje=cursor.fetchall()
-        Peritajes={'id':datosPeritaje[0],'idCliente':datosPeritaje[2],'fecha':datosPeritaje[3]}
-        # Obtener el id del cliente del peritaje
-        id_cliente = datosPeritaje[2]
-        sql_cliente = "SELECT nombre FROM Clientes WHERE idCliente = '{0}'".format(id_cliente)
-        cursor.execute(sql_cliente)
-        nombre_cliente = cursor.fetchone()[0]
-        return jsonify({'success':True,'cliente':nombre_cliente,'datos':Peritajes})
+        datos=cursor.fetchall()
+        peritajes=[]
+        if datos != None:
+            for fila in datos:
+                datosPeritaje={'id':fila[0],'Cliente':fila[2],'fecha':fila[3]}
+                peritajes.append(datosPeritaje)
+            
+            for id in peritajes:
+                idCliente = id["Cliente"]
+                sql_cliente = "SELECT nombre FROM Clientes WHERE idCliente = '{0}'".format(idCliente)
+                cursor.execute(sql_cliente)
+                nombre_cliente = cursor.fetchone()
+                id["Cliente"] = nombre_cliente
+            cursor.close()
+            return jsonify({'success':True,'cliente':peritajes["Cliente"],'datos':peritajes})
+        else:
+            cursor.close()
+            return jsonify({'success':False,'mensaje':"Ningun peritaje guardado"})
     except Exception as ex:
         print(ex)
         return "error"
