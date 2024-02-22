@@ -337,27 +337,20 @@ def update(code):
     except Exception as ex:
         print(ex)
         return "error"
-@app.route('/updateImpactos/<code>',methods=['POST'])
-def updateImpactos(code):
+@app.route('/load/<code>',methods=['GET'])
+def load(code):
     try:
         cursor=conexion.cursor()
-        sql="""UPDATE Impactos SET
-        zona = '{0}', peq = '{1}', med = '{2}', grd = '{3}', mgrd = '{4}', reparacion = '{5}', material = '{6}', posibledpp = '{7}'
-        WHERE peritajesId = '{8}'""".format(
-            request.form['zona'],
-            request.form['peq'],
-            request.form['med'],
-            request.form['grd'],
-            request.form['mgrd'],
-            request.form['reparacion'],
-            request.form['material'],
-            request.form['posibledpp'],
-            code
-        )
+        sql="SELECT * FROM peritajes WHERE iduserP = '{0}'".format(code)
         cursor.execute(sql)
-        conexion.commit()
-        cursor.close()
-        return jsonify({'success':True,'mensaje':"impactos actualizados"})
+        datosPeritaje=cursor.fetchall()
+        Peritajes={'id':datosPeritaje[0],'idCliente':datosPeritaje[2],'fecha':datosPeritaje[3]}
+        # Obtener el id del cliente del peritaje
+        id_cliente = datosPeritaje[2]
+        sql_cliente = "SELECT nombre FROM Clientes WHERE idCliente = '{0}'".format(id_cliente)
+        cursor.execute(sql_cliente)
+        nombre_cliente = cursor.fetchone()[0]
+        return jsonify({'success':True,'cliente':nombre_cliente,'datos':Peritajes})
     except Exception as ex:
         print(ex)
         return "error"
