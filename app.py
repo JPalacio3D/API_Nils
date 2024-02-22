@@ -355,7 +355,7 @@ def load(code):
                 idCliente = id['Cliente']
                 sql_cliente = "SELECT nombre FROM Clientes WHERE idClientes = '{0}'".format(idCliente)
                 cursor.execute(sql_cliente)
-                nombre_cliente = cursor.fetchone()
+                nombre_cliente = cursor.fetchone()[0]
                 datosCompletos={'id':id['id'],'cliente':nombre_cliente,'fecha':id['fecha']}
                 peritajesCompletos.append(datosCompletos)
             cursor.close()
