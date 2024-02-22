@@ -341,7 +341,15 @@ def update(code):
 def load(code):
     try:
         cursor=conexion.cursor()
+        
+        #añadimos argumento de limite (load/code?limit=x)
+        limit = request.args.get('limit')
+        
         sql="SELECT * FROM peritajes WHERE iduserP = '{0}'".format(code)
+        #añadimos el limite si esta el argumento
+        if limit and limit.isdigit():
+            sql += " LIMIT '{0}'".format(limit)
+        
         cursor.execute(sql)
         datos=cursor.fetchall()
         peritajes=[]
