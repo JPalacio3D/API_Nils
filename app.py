@@ -352,7 +352,7 @@ def load(code):
             
             for id in peritajes:
                 idCliente = id["Cliente"]
-                sql_cliente = "SELECT nombre FROM Clientes WHERE idCliente = '{0}'".format(idCliente)
+                sql_cliente = "SELECT nombre FROM Clientes WHERE idClientes = '{0}'".format(idCliente)
                 cursor.execute(sql_cliente)
                 nombre_cliente = cursor.fetchone()
                 id["Cliente"] = nombre_cliente
