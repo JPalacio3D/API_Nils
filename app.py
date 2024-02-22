@@ -345,6 +345,7 @@ def load(code):
         cursor.execute(sql)
         datos=cursor.fetchall()
         peritajes=[]
+        peritajesCompletos=[]
         if datos != None:
             for fila in datos:
                 datosPeritaje={'id':fila[0],'Cliente':fila[2],'fecha':fila[3]}
@@ -355,9 +356,10 @@ def load(code):
                 sql_cliente = "SELECT nombre FROM Clientes WHERE idClientes = '{0}'".format(idCliente)
                 cursor.execute(sql_cliente)
                 nombre_cliente = cursor.fetchone()
-                id['nombre'] = nombre_cliente
+                datosCompletos={'id':id['id'],'cliente':nombre_cliente,'fecha':id['fecha']}
+                peritajesCompletos.append(datosCompletos)
             cursor.close()
-            return jsonify({'success':True,'cliente':peritajes['nombre'],'datos':peritajes})
+            return jsonify({'success':True,'datos':peritajesCompletos})
         else:
             cursor.close()
             return jsonify({'success':False,'mensaje':"Ningun peritaje guardado"})
