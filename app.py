@@ -404,10 +404,13 @@ def loadDatosCoche(code):
         sql="SELECT * FROM coches_peritaje WHERE idperitaje = '{0}'".format(code)
         cursor.execute(sql)
         datos=cursor.fetchone()
-        cursor.close()
+
         if datos != None:
-            return jsonify({'success':True,'datos':datos,'mensaje':"Datos del coche cargados"})
+            datosCoche = {'idCoche':datos[0],'idperitaje':datos[1],'idcoche':datos[2],'modelo':datos[3],'matricula':datos[4],'version':datos[5],'fecha':datos[6],'chasis':datos[7],'kms':datos[8],'color':datos[9],'aseguradora':datos[10]}
+            cursor.close()
+            return jsonify({'success':True,'datos':datosCoche,'mensaje':"Datos del coche cargados"})
         else:
+            cursor.close()
             return jsonify({'success':False,'mensaje':"Ningun coche guardado para este peritaje"})
     except Exception as ex:
         print(ex)
