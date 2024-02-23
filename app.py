@@ -397,6 +397,37 @@ def marcas():
     except Exception as ex:
         print(ex)
         return "error"
+@app.route('/loadDatosCoche/<code>',methods=['GET'])
+def loadDatosCoche(code):
+    try:
+        cursor = conexion.cursor()
+        sql="SELECT * FROM coches_peritaje WHERE idperitaje = '{0}'".format(code)
+        datos=cursor.fetchone()
+        cursor.close()
+        if datos != None:
+            return jsonify({'success':True,'datos':datos,'mensaje':"Datos del coche cargados"})
+        else:
+            return jsonify({'success':False,'mensaje':"Ningun coche guardado para este peritaje"})
+    except Exception as ex:
+        print(ex)
+        return "error"
+@app.route('/loadImpactos/<code>',methods=['GET'])
+def loadImpactos(code):
+    try:
+        cursor = conexion.cursor()
+        sql="SELECT * FROM Impactos WHERE peritajesId = '{0}'".format(code)
+        datos=cursor.fetchall()
+        impactos=[]
+        if datos != None:
+            for fila in datos:
+                datosImpacto = {'zona':fila[2],'peq':fila[3],'med':fila[4],'grd':fila[5],'mgrd':fila[6],'reparacion':fila[7],'material':fila[8],'posibledpp':fila[9]}
+                impactos.append(datosImpacto)
+            return jsonify({'success':True,'datos':impactos,'mensaje':"Impactos cargados"})
+        else:
+            return jsonify({'success':False,'mensaje':"Ningun Impacto guardado para este peritaje"})
+    except Exception as ex:
+        print(ex)
+        return "error"
 def pagina_no_encontrada(error):
     return "<h1>La página no existe</h1>", 404
 
