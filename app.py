@@ -402,6 +402,7 @@ def loadDatosCoche(code):
     try:
         cursor = conexion.cursor()
         sql="SELECT * FROM coches_peritaje WHERE idperitaje = '{0}'".format(code)
+        cursor.execute(sql)
         datos=cursor.fetchone()
         cursor.close()
         if datos != None:
@@ -416,14 +417,17 @@ def loadImpactos(code):
     try:
         cursor = conexion.cursor()
         sql="SELECT * FROM Impactos WHERE peritajesId = '{0}'".format(code)
+        cursor.execute(sql)
         datos=cursor.fetchall()
         impactos=[]
         if datos != None:
             for fila in datos:
                 datosImpacto = {'zona':fila[2],'peq':fila[3],'med':fila[4],'grd':fila[5],'mgrd':fila[6],'reparacion':fila[7],'material':fila[8],'posibledpp':fila[9]}
                 impactos.append(datosImpacto)
+            cursor.close()
             return jsonify({'success':True,'datos':impactos,'mensaje':"Impactos cargados"})
         else:
+            cursor.close()
             return jsonify({'success':False,'mensaje':"Ningun Impacto guardado para este peritaje"})
     except Exception as ex:
         print(ex)
