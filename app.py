@@ -406,7 +406,7 @@ def loadDatosCoche(code):
         datos=cursor.fetchone()
 
         if datos != None:
-            datosCoche = {'idCoche':datos[0],'idperitaje':datos[1],'idcoche':datos[2],'modelo':datos[3],'matricula':datos[4],'version':datos[5],'fecha':datos[6],'chasis':datos[7],'kms':datos[8],'color':datos[9],'aseguradora':datos[10]}
+            datosCoche = {'idCoche':datos[0],'idperitaje':datos[1],'marca':datos[2],'modelo':datos[3],'matricula':datos[4],'version':datos[5],'fecha':datos[6],'chasis':datos[7],'kms':datos[8],'color':datos[9],'aseguradora':datos[10]}
             cursor.close()
             return jsonify({'success':True,'datos':datosCoche,'mensaje':"Datos del coche cargados"})
         else:
