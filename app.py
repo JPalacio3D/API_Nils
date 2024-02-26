@@ -439,9 +439,11 @@ def loadImpactos(code):
 def buscarPeritaje(code):
     try:
         cursor = conexion.cursor()
+        name = request.args.get('name')
+        
         sql="SELECT idCLientes FROM Clientes WHERE iduser = '{0}' AND nombre = '{1}'".format(
             code,
-            request.form['nombre']
+            name
         )
         cursor.execute(sql)
         idcliente = cursor.fetchone()
