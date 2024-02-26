@@ -435,6 +435,48 @@ def loadImpactos(code):
     except Exception as ex:
         print(ex)
         return "error"
+@app.route('/buscarPeritaje/<code>',methods=['GET'])
+def buscarPeritaje(code):
+    try:
+        cursor = conexion.cursor()
+        sql="SELECT idCLientes FROM Clientes WHERE iduser = '{0}' AND nombre = '{1}'".format(
+            code,
+            request.form['nombre']
+        )
+        cursor.execute(sql)
+        idcliente = cursor.fetchone()
+        if idcliente != None:
+            sql="SELECT * FROM peritajes WHERE iduserP = '{0}' AND idcliente = '{1}'".format(
+                code,
+                idcliente
+            )
+            cursor.execute(sql)
+            datos = cursor.fetchall()
+            peritajes=[]
+            peritajesCompletos=[]
+            if datos != None:
+                for fila in datos:
+                    datosPeritaje={'id':fila[0],'Cliente':fila[2],'fecha':fila[3]}
+                    peritajes.append(datosPeritaje)
+                
+                for id in peritajes:
+                    idCliente = id['Cliente']
+                    sql_cliente = "SELECT nombre FROM Clientes WHERE idClientes = '{0}'".format(idCliente)
+                    cursor.execute(sql_cliente)
+                    nombre_cliente = cursor.fetchone()[0]
+                    datosCompletos={'id':id['id'],'cliente':nombre_cliente,'fecha':id['fecha']}
+                    peritajesCompletos.append(datosCompletos)
+                cursor.close()
+                return jsonify({'success':True,'datos':peritajesCompletos})
+            else:
+                cursor.close()
+                return jsonify({'success': False, 'mensaje': "Nungun peritaje guardado con ese nombre"})
+        else:
+            cursor.close()
+            return jsonify({'success': False, 'mensaje': "Nungun peritaje guardado con ese nombre"})
+    except Exception as ex:
+        print(ex)
+        return "error"
 def pagina_no_encontrada(error):
     return "<h1>La página no existe</h1>", 404
 
