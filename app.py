@@ -46,14 +46,14 @@ def singin():
         cursor=conexion.cursor()
         sql="""INSERT INTO User (userName, pasword, email, IsAdmin)
           VALUES ('{0}', '{1}', '{2}', '{3}')""".format(
-              request.json['userName'],
-              generate_password_hash(request.json['password']),
-              request.json['email'],
-              request.json['IsAdmin'])
+              request.form['userName'],
+              generate_password_hash(request.form['password']),
+              request.form['email'],
+              request.form['IsAdmin'])
         cursor.execute(sql)
         conexion.commit() #confirma la accionde inserción
         cursor.close()
-        return jsonify({'mensaje':"Usuario registrado"})
+        return jsonify({'success':True,'mensaje':"Usuario registrado"})
     except Exception as ex:
         print("ex")
         print(ex)
