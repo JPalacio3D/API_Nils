@@ -497,6 +497,22 @@ def buscarPeritaje(code):
     except Exception as ex:
         print(ex)
         return "error"
+
+@app.route('/añadirMarcaCoche',methods=['POST'])
+def añadirMarcaCoche():
+    try:
+        cursor = conexion.cursor()
+        sql = "INSERT INTO DBcoches (Marca) VALUES ('{0}')".format(
+            request.form['marca']
+        )
+        cursor.execute(sql)
+        conexion.commit()
+        cursor.close()
+        return jsonify({'success':True,'mensaje':"Marca añadida con exito"})     
+    except Exception as ex:
+        print(ex)
+        return "error"     
+
 def pagina_no_encontrada(error):
     return "<h1>La página no existe</h1>", 404
 
