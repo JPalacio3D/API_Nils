@@ -14,7 +14,6 @@ from models.Security import Security
 from models.entities.User import User
 
 app=Flask(__name__) #este parametro servira para saber si estamos ejecutando este archivo como principal
-
 #conexion=MySQL(app)
 # Define la función de conexión
 def conectar():
@@ -24,29 +23,8 @@ def conectar():
         password='CnqN1HBzgsypNbZkldpd',
         db='b5xjtjc7ljbwo9pqw9ds'
     )
+conexion = conectar()
 # Define la función para ejecutar consultas con reconexión automática
-def execute_query(sql):
-    max_retries = 3
-    retry_count = 0
-    while retry_count < max_retries:
-        try:
-            conexion.ping(reconnect=True)  # Verifica la conexión, y reconecta si es necesario
-            cursor = conexion.cursor()
-            cursor.execute(sql)
-            conexion.commit()
-            cursor.close()
-            return True
-        except Exception as ex:
-            print("Error de conexión:", ex)
-            # Intenta reconectar
-            retry_count += 1
-            if retry_count == max_retries:
-                return False
-            else:
-                print("Intentando reconectar...")
-                conexion = conectar()  # Reconecta
-    return False
-
 @app.route('/login', methods=['POST','GET'])
 def login():
     try:
