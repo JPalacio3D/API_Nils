@@ -40,6 +40,24 @@ def login():
     else:
         return jsonify({'success': False,'mensaje':"User not found"})
 
+@app.route('/cambiarPass/<code>',methods=['POST'])
+def cambiarPass(code):
+    try:
+        cursor=conexion.cursor()
+        sql="""UPDATE User SET pasword = '{1}' 
+        WHERE idUser = '{0}'""".format(
+            code,
+            generate_password_hash(request.form['password']))
+        cursor.execute(sql)
+        conexion.commit() #confirma la accionde inserción
+        cursor.close()
+        return jsonify({'success':True,'mensaje':"Contraseña Cambiada"})
+    except Exception as ex:
+        print("ex")
+        print(ex)
+        return jsonify({'mensaje':"error",'error':str(ex)}),500
+    
+
 @app.route('/singin', methods=['POST'])   
 def singin():     
     try:
