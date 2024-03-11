@@ -16,29 +16,56 @@ from models.entities.User import User
 app=Flask(__name__) #este parametro servira para saber si estamos ejecutando este archivo como principal
 
 #conexion=MySQL(app)
-conexion=pymysql.connect(
-            host='b5xjtjc7ljbwo9pqw9ds-mysql.services.clever-cloud.com',
-            user='ugxkrton3nwnoe1m',
-            password='CnqN1HBzgsypNbZkldpd',
-            db='b5xjtjc7ljbwo9pqw9ds'            
-        )
+# Define la función de conexión
+def conectar():
+    return pymysql.connect(
+        host='b5xjtjc7ljbwo9pqw9ds-mysql.services.clever-cloud.com',
+        user='ugxkrton3nwnoe1m',
+        password='CnqN1HBzgsypNbZkldpd',
+        db='b5xjtjc7ljbwo9pqw9ds'
+    )
+# Define la función para ejecutar consultas con reconexión automática
+def execute_query(sql):
+    max_retries = 3
+    retry_count = 0
+    while retry_count < max_retries:
+        try:
+            conexion.ping(reconnect=True)  # Verifica la conexión, y reconecta si es necesario
+            cursor = conexion.cursor()
+            cursor.execute(sql)
+            conexion.commit()
+            cursor.close()
+            return True
+        except Exception as ex:
+            print("Error de conexión:", ex)
+            # Intenta reconectar
+            retry_count += 1
+            if retry_count == max_retries:
+                return False
+            else:
+                print("Intentando reconectar...")
+                conexion = conectar()  # Reconecta
+    return False
 
 @app.route('/login', methods=['POST','GET'])
 def login():
-
-    username = request.form['username']
-    password = request.form['password']
-    user = User(0,username,password,None,None)
-    logged_user=ModelUser.login(conexion,user)
-    if logged_user!=None:
-        if logged_user.pasword:
-            encoded_token = Security.generate_token(logged_user)
-            data = {'id':logged_user.idUser,'username':logged_user.userName,'email':logged_user.email,'IsAdmin':logged_user.IsAdmin}
-            return jsonify({'success': True, 'token': encoded_token,'mensaje':"loged",'data':data})
+    try:
+        username = request.form['username']
+        password = request.form['password']
+        user = User(0,username,password,None,None)
+        logged_user=ModelUser.login(conexion,user)
+        if logged_user!=None:
+            if logged_user.pasword:
+                encoded_token = Security.generate_token(logged_user)
+                data = {'id':logged_user.idUser,'username':logged_user.userName,'email':logged_user.email,'IsAdmin':logged_user.IsAdmin}
+                return jsonify({'success': True, 'token': encoded_token,'mensaje':"loged",'data':data})
+            else:
+                return jsonify({'success': False,'mensaje':"Invalid password"})
         else:
-            return jsonify({'success': False,'mensaje':"Invalid password"})
-    else:
-        return jsonify({'success': False,'mensaje':"User not found"})
+            return jsonify({'success': False,'mensaje':"User not found"})
+    except Exception as ex:
+        print(ex)
+        return jsonify({'success':False,'mensaje':"Error de servidor"}), 500
 
 @app.route('/cambiarPass/<code>',methods=['POST'])
 def cambiarPass(code):
@@ -512,11 +539,12 @@ def añadirMarcaCoche():
     except Exception as ex:
         print(ex)
         return "error"     
-
+    
 def pagina_no_encontrada(error):
     return "<h1>La página no existe</h1>", 404
 
 if __name__=='__main__':
+    conexion = conectar()
     app.config.from_object(config['development'])#pasamos la configuracion desde un objeto
     app.register_error_handler(404,pagina_no_encontrada)#para manejar errores
     app.register_error_handler(409,None)
