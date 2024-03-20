@@ -1,4 +1,4 @@
-from flask import Flask,jsonify,request
+from flask import Flask,jsonify,request,render_template
 #from flask_mysqldb import MySQL
 from config import config
 from werkzeug.security import generate_password_hash
@@ -24,7 +24,9 @@ def conectar():
         db='b5xjtjc7ljbwo9pqw9ds'
     )
 conexion = conectar()
-# Define la función para ejecutar consultas con reconexión automática
+@app.route('/resetPass')
+def resetPass():
+    return render_template('auth/reset.html')
 @app.route('/login', methods=['POST','GET'])
 def login():
     try:
