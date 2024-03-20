@@ -28,6 +28,7 @@ conexion = conectar()
 @app.route('/login', methods=['POST','GET'])
 def login():
     try:
+        conexion = conectar()
         username = request.form['username']
         password = request.form['password']
         user = User(0,username,password,None,None)
