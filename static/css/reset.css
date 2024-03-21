@@ -11,9 +11,14 @@ body {
   background-color: #3745cd;
 }
 
+.form-reset .h3{
+  color: white;
+  font-size: 24px;
+}
+
 .form-reset {
-  width: 200%;
-  max-width: 330px;
+  width: 100%;
+  max-width: 530px;
   padding: 15px;
   margin: auto;
 }
