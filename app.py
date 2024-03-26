@@ -23,14 +23,14 @@ def conectar():
         password='CnqN1HBzgsypNbZkldpd',
         db='b5xjtjc7ljbwo9pqw9ds'
     )
-conexion = conectar()
+#conexion = conectar()
 @app.route('/resetPass')
 def resetPass():
     return render_template('auth/reset.html')
 @app.route('/login', methods=['POST','GET'])
 def login():
+    conexion = conectar()
     try:
-        conexion = conectar()
         username = request.form['username']
         password = request.form['password']
         user = User(0,username,password,None,None)
@@ -47,9 +47,12 @@ def login():
     except Exception as ex:
         print(ex)
         return jsonify({'success':False,'mensaje':"Error de servidor"}), 500
+    finally:
+        conexion.close()   
 
 @app.route('/cambiarPass/<code>',methods=['POST'])
 def cambiarPass(code):
+    conexion = conectar()
     try:
         cursor=conexion.cursor()
         sql="""UPDATE User SET pasword = '{1}' 
@@ -64,10 +67,13 @@ def cambiarPass(code):
         print("ex")
         print(ex)
         return jsonify({'mensaje':"error",'error':str(ex)}),500
+    finally:
+        conexion.close()   
     
 
 @app.route('/singin', methods=['POST'])   
-def singin():     
+def singin():   
+    conexion = conectar()  
     try:
         cursor=conexion.cursor()
         sql="""INSERT INTO User (userName, pasword, email, IsAdmin)
@@ -93,9 +99,12 @@ def singin():
         else:
             cursor.close()
             return jsonify({'mensaje':"error",'error':str(ex)}),500
+    finally:
+        conexion.close()   
 
 @app.route('/usuario',methods=['GET'])
 def usuario():
+    conexion = conectar()
     try:
         cursor=conexion.cursor()
         sql="SELECT * FROM User"
@@ -110,9 +119,12 @@ def usuario():
     except Exception as ex:
         cursor.close()
         return jsonify({'mensaje':"error"})
+    finally:
+        conexion.close()   
 #BUSCA TODOS LOS CLIENTES DE UN USUARIO
 @app.route('/clientes/<codigo>',methods=['GET'])
 def obtenerClientes(codigo):
+    conexion = conectar()
     try:
         cursor=conexion.cursor()
         sql="SELECT idClientes, nombre, direccion, nif, cif, telef, precio FROM Clientes WHERE iduser = '{0}'".format(codigo)
@@ -132,9 +144,12 @@ def obtenerClientes(codigo):
     except Exception as ex:
         print(ex)
         return "error"
+    finally:
+        conexion.close()   
 #BUSCA UN CLIENTE
 @app.route('/cliente/<codigo>',methods=['GET'])
 def buscarCliente(codigo):
+    conexion = conectar()
     try:
         cursor=conexion.cursor()
         sql="SELECT nombre, direccion, nif, cif, telef, precio FROM Clientes WHERE idClientes = '{0}'".format(codigo)
@@ -151,9 +166,12 @@ def buscarCliente(codigo):
     except Exception as ex:
         print(ex)
         return "error"
+    finally:
+        conexion.close()   
 
 @app.route('/cliente',methods=['POST','GET'])
 def crear_cliente():
+    conexion = conectar()
     try:
         cursor=conexion.cursor()
         sql="SELECT * FROM Clientes WHERE nombre = '{0}'".format(
@@ -186,9 +204,12 @@ def crear_cliente():
     except Exception as ex:
         print(ex)
         return "error"
+    finally:
+        conexion.close()   
 
 @app.route('/datos/<codigo>',methods=['GET'])
 def obtenerDatos(codigo):
+    conexion = conectar()
     try:
         cursor = conexion.cursor()
         sql="SELECT idDatos, name, dirección, nif, cif, telefono, email FROM Datos WHERE userid = '{0}'".format(codigo)
@@ -205,8 +226,11 @@ def obtenerDatos(codigo):
     except Exception as ex:
         print(ex)
         return "error"
+    finally:
+        conexion.close()   
 @app.route('/guardarDatos',methods=['POST'])
 def guardarDatos():
+    conexion = conectar()
     try:
         cursor=conexion.cursor()
         sql="SELECT * FROM Datos WHERE userid = '{0}'".format(
@@ -250,8 +274,11 @@ def guardarDatos():
     except Exception as ex:
         print(ex)
         return "error"
+    finally:
+        conexion.close()   
 @app.route('/save',methods=['POST'])
 def save():
+    conexion = conectar()
     try:
         cursor=conexion.cursor()
         #CREAMOS "LA FICHA" DE PERITAJE
@@ -286,8 +313,11 @@ def save():
     except Exception as ex:
         print(ex)
         return "error"
+    finally:
+        conexion.close()   
 @app.route('/saveImpactos',methods=['POST'])
 def saveImpactos():
+    conexion = conectar()
     try:
         cursor=conexion.cursor()
         sql="SELECT idImpactos FROM Impactos WHERE zona = '{1}' AND peritajesId = '{0}'".format(
@@ -331,9 +361,12 @@ def saveImpactos():
     except Exception as ex:
         print(ex)
         return "error"
+    finally:
+        conexion.close()   
     
 @app.route('/update/<code>',methods=['POST'])
 def update(code):
+    conexion = conectar()
     try:
         cursor=conexion.cursor()
         sql="UPDATE peritajes SET fecha_creacion = '{0}' WHERE idperitajes = '{1}' ".format(
@@ -363,8 +396,11 @@ def update(code):
     except Exception as ex:
         print(ex)
         return "error"
+    finally:
+        conexion.close()   
 @app.route('/load/<code>',methods=['GET'])
 def load(code):
+    conexion = conectar()
     try:
         cursor=conexion.cursor()
         
@@ -400,9 +436,12 @@ def load(code):
     except Exception as ex:
         print(ex)
         return "error"
+    finally:
+        conexion.close()   
     
 @app.route('/marcasCoche',methods=['GET'])
 def marcas():
+    conexion = conectar()
     try:
         cursor=conexion.cursor()
         #CREAMOS "LA FICHA" DE PERITAJE
@@ -423,8 +462,11 @@ def marcas():
     except Exception as ex:
         print(ex)
         return "error"
+    finally:
+        conexion.close()   
 @app.route('/loadDatosCoche/<code>',methods=['GET'])
 def loadDatosCoche(code):
+    conexion = conectar()
     try:
         cursor = conexion.cursor()
         sql="SELECT * FROM coches_peritaje WHERE idperitaje = '{0}'".format(code)
@@ -441,8 +483,11 @@ def loadDatosCoche(code):
     except Exception as ex:
         print(ex)
         return "error"
+    finally:
+        conexion.close()   
 @app.route('/loadImpactos/<code>',methods=['GET'])
 def loadImpactos(code):
+    conexion = conectar()
     try:
         cursor = conexion.cursor()
         sql="SELECT * FROM Impactos WHERE peritajesId = '{0}'".format(code)
@@ -461,8 +506,11 @@ def loadImpactos(code):
     except Exception as ex:
         print(ex)
         return "error"
+    finally:
+        conexion.close()   
 @app.route('/buscarPeritaje/<code>',methods=['GET'])
 def buscarPeritaje(code):
+    conexion = conectar()
     try:
         cursor = conexion.cursor()
         name = request.args.get('name')
@@ -505,9 +553,12 @@ def buscarPeritaje(code):
     except Exception as ex:
         print(ex)
         return "error"
+    finally:
+        conexion.close()   
 
 @app.route('/añadirMarcaCoche',methods=['POST'])
 def añadirMarcaCoche():
+    conexion = conectar()
     try:
         cursor = conexion.cursor()
         sql = "INSERT INTO DBcoches (Marca) VALUES ('{0}')".format(
@@ -519,7 +570,9 @@ def añadirMarcaCoche():
         return jsonify({'success':True,'mensaje':"Marca añadida con exito"})     
     except Exception as ex:
         print(ex)
-        return "error"     
+        return "error"
+    finally:
+        conexion.close()     
     
 def pagina_no_encontrada(error):
     return "<h1>La página no existe</h1>", 404
