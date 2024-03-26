@@ -7,7 +7,8 @@
 
 {% block body %}
 <form class="form-reset">
-    <h1 class="h3 mb-3 fw-normal">Crear nueva contraseña</h1>
+    <img class="mb-4 icono" src="{{ url_for('static', filename='img/icono_peritajes.png') }}" alt="" width="300" height="300">
+    <h1 class="h3 mb-3 fw-normal">Crea una nueva contraseña</h1>
 
     <div class="form-floating">
       <input type="email" class="form-control" id="floatingInput" placeholder="name@example.com">
@@ -15,8 +16,8 @@
     </div>
     <div class="form-floating">
       <input type="password" class="form-control" id="floatingPassword" placeholder="Password">
-      <label for="floatingPassword">New Password</label>
+      <label for="floatingPassword">Nueva Contraseña</label>
     </div>
-    <button class="btn btn-primary w-100 py-2" type="submit">Sign in</button>
+    <button class="btn btn-primary w-100 py-2" type="submit">Guardar nueva contraseña</button>
   </form>
 {% endblock body %}
