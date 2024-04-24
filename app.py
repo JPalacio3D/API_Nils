@@ -203,7 +203,7 @@ def crear_cliente():
             return jsonify({'success': False,'mensaje': "Cliente ya existe."})
     except Exception as ex:
         print(ex)
-        return ex
+        return jsonify(jsonify({'success': False,'mensaje': ex}))
     finally:
         conexion.close()   
 
