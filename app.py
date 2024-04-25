@@ -583,11 +583,7 @@ def uploadImagen(code):
         imagen_base64 = request.form['imagen']
         imagen_bytes = base64.b64decode(imagen_base64)
         
-        sql = "UPDATE Datos SET Logo = '{1}' WHERE userid = '{0}'".format(
-            code,
-            imagen_bytes
-        )
-        cursor.execute(sql)
+        cursor.execute("UPDATE Datos SET Logo = %s WHERE userid = %s", (imagen_bytes, code))
         conexion.commit()
         cursor.close()
         return jsonify({'success':True,'mensaje':"Imagen actualizada"})
