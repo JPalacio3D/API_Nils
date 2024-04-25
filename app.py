@@ -4,6 +4,7 @@ from config import config
 from werkzeug.security import generate_password_hash
 import pymysql
 import datetime
+import base64
 #from src.database.db import get_connection
 
 #Models
@@ -579,9 +580,12 @@ def uploadImagen(code):
     conexion = conectar()
     try:
         cursor = conexion.cursor()
+        imagen_base64 = request.form['imagen']
+        imagen_bytes = base64.b64decode(imagen_base64)
+        
         sql = "UPDATE Datos SET Logo = '{1}' WHERE userid = '{0}'".format(
             code,
-            request.form['imagen']
+            imagen_bytes
         )
         cursor.execute(sql)
         conexion.commit()
