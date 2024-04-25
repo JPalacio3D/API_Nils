@@ -573,6 +573,25 @@ def añadirMarcaCoche():
         return "error"
     finally:
         conexion.close()     
+
+@app.route('/uploadImagen/<code>',methods=['POST'])
+def uploadImagen(code):
+    conexion = conectar()
+    try:
+        cursor = conexion.cursor()
+        sql = "UPDATE Datos SET Logo = '{1}' WHERE userid = '{0}'".format(
+            code,
+            request.form['imagen']
+        )
+        cursor.execute(sql)
+        conexion.commit()
+        cursor.close()
+        return jsonify({'success':True,'mensaje':"Imagen actualizada"})
+    except Exception as ex:
+        print(ex)
+        return jsonify({'success':False,'mensaje':"No se ha podido actualizar la imagen"})
+    finally:
+        conexion.close() 
     
 def pagina_no_encontrada(error):
     return "<h1>La página no existe</h1>", 404
