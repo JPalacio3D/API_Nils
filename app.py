@@ -592,6 +592,24 @@ def uploadImagen(code):
         return jsonify({'success':False,'mensaje':"No se ha podido actualizar la imagen"})
     finally:
         conexion.close() 
+        
+@app.route('/obtenerImagen/<code>', methods=['GET'])
+def obtenerImagen(code):
+    conexion = conectar()
+    try:
+        cursor = conexion.cursor()
+        cursor.execute("SELECT Logo FROM Datos WHERE userid = %s", (code,))
+        imagen_bytes = cursor.fetchone()[0]
+
+        # Convertir los bytes de la imagen a una cadena Base64
+        imagen_base64 = base64.b64encode(imagen_bytes).decode('utf-8')
+
+        return jsonify({'success': True, 'imagen': imagen_base64})
+    except Exception as ex:
+        print(ex)
+        return jsonify({'success': False, 'mensaje': "No se ha podido obtener la imagen"})
+    finally:
+        conexion.close()
     
 def pagina_no_encontrada(error):
     return "<h1>La página no existe</h1>", 404
