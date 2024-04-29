@@ -215,7 +215,7 @@ def actualizar_cliente():
     try:
         cursor=conexion.cursor()
         
-        sql="""UPDATE Clientes SET nombre = '{1}', direccion = '{2}', nif = '{3}', cif = '{4}', telef = '{5}', precio = '{6}' WHERE idclientes = '{0}')
+        sql="""UPDATE Clientes SET nombre = '{1}', direccion = '{2}', nif = '{3}', cif = '{4}', telef = '{5}', precio = '{6}' WHERE idclientes = '{0}'
         """.format(
             request.form['idcliente'],
             request.form['nombre'],
