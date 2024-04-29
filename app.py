@@ -202,7 +202,7 @@ def crear_cliente():
             return jsonify({'success': True,'mensaje':"Cliente registrado",'id':idCliente})
         else:
             cursor.close()
-            return jsonify({'success': False,'mensaje': "Cliente ya existe."})
+            return jsonify({'success': False,'mensaje': "Cliente ya existe.",'IdCliente':datos[0]})
     except Exception as ex:
         print(ex)
         return jsonify(jsonify({'success': False,'mensaje': "ERROR: "+ex}))
