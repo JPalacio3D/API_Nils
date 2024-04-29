@@ -609,7 +609,18 @@ def uploadImagen(code):
         imagen_base64 = request.form['imagen']
         imagen_bytes = base64.b64decode(imagen_base64)
         
-        cursor.execute("UPDATE Datos SET Logo = %s WHERE userid = %s", (imagen_bytes, code))
+        sql="SELECT * FROM Datos WHERE userid = '{0}'".format(
+            request.form['userid']
+        )
+        print(sql)
+        cursor.execute(sql)
+        print("0k")
+        datos=cursor.fetchone()
+        print(datos)
+        if datos == None:
+            cursor.execute("INSERT INTO Datos (Logo, userid) VALUES (%s, %s)", (imagen_bytes, code))
+        else:
+            cursor.execute("UPDATE Datos SET Logo = %s WHERE userid = %s", (imagen_bytes, code))
         conexion.commit()
         cursor.close()
         return jsonify({'success':True,'mensaje':"Imagen actualizada"})
