@@ -175,8 +175,9 @@ def crear_cliente():
     conexion = conectar()
     try:
         cursor=conexion.cursor()
-        sql="SELECT * FROM Clientes WHERE nombre = '{0}'".format(
-            request.form['nombre']
+        sql="SELECT * FROM Clientes WHERE nombre = '{0}' AND iduser = '{1}'".format(
+            request.form['nombre'],
+            request.form['iduser']
         )
         print(sql)
         cursor.execute(sql)
