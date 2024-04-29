@@ -207,7 +207,32 @@ def crear_cliente():
         print(ex)
         return jsonify(jsonify({'success': False,'mensaje': "ERROR: "+ex}))
     finally:
-        conexion.close()   
+        conexion.close()
+
+@app.route('/updateCliente',methods=['POST','GET'])
+def actualizar_cliente():
+    conexion = conectar()
+    try:
+        cursor=conexion.cursor()
+        
+        sql="""UPDATE Clientes SET nombre = '{1}', direccion = '{2}', nif = '{3}', cif = '{4}', telef = '{5}', precio = '{6}' WHERE idclientes = '{0}')
+        """.format(
+            request.form['idcliente'],
+            request.form['nombre'],
+            request.form['direccion'],
+            request.form['nif'],
+            request.form['cif'],
+            request.form['telef'],
+            request.form['precio'])
+        cursor.execute(sql)
+        conexion.commit() #confirma la accionde inserción
+        cursor.close()
+        return jsonify({'success': True,'mensaje':"Cliente atualizado"})
+    except Exception as ex:
+        print(ex)
+        return jsonify(jsonify({'success': False,'mensaje': "ERROR: "+ex}))
+    finally:
+        conexion.close()      
 
 @app.route('/datos/<codigo>',methods=['GET'])
 def obtenerDatos(codigo):
