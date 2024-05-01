@@ -610,7 +610,7 @@ def uploadImagen(code):
         imagen_bytes = base64.b64decode(imagen_base64)
         
         sql="SELECT * FROM Datos WHERE userid = '{0}'".format(
-            request.form['userid']
+            code
         )
         print(sql)
         cursor.execute(sql)
