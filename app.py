@@ -619,10 +619,12 @@ def uploadImagen(code):
         print(datos)
         if datos == None:
             cursor.execute("INSERT INTO Datos (Logo, userid) VALUES (%s, %s)", (imagen_bytes, code))
+            conexion.commit()
+            cursor.close()
         else:
             cursor.execute("UPDATE Datos SET Logo = %s WHERE userid = %s", (imagen_bytes, code))
-        conexion.commit()
-        cursor.close()
+            conexion.commit()
+            cursor.close()
         return jsonify({'success':True,'mensaje':"Imagen actualizada"})
     except Exception as ex:
         print(ex)
