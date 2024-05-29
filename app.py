@@ -588,13 +588,19 @@ def añadirMarcaCoche():
     conexion = conectar()
     try:
         cursor = conexion.cursor()
-        sql = "INSERT INTO DBcoches (Marca) VALUES ('{0}')".format(
-            request.form['marca']
-        )
+        sql = "SELECT * FROM DBcoches WHERE Marca = '{0}'".format(request.form['marca'])
         cursor.execute(sql)
-        conexion.commit()
-        cursor.close()
-        return jsonify({'success':True,'mensaje':"Marca añadida con exito"})     
+        datos=cursor.fetchone()
+        if datos == None:
+            sql = "INSERT INTO DBcoches (Marca) VALUES ('{0}')".format(
+                request.form['marca']
+            )
+            cursor.execute(sql)
+            conexion.commit()
+            cursor.close()
+            return jsonify({'success':True,'mensaje':"Marca añadida con exito"})   
+        else:
+            return jsonify({'success': False,'mensaje': "La marca ya existe"})  
     except Exception as ex:
         print(ex)
         return "error"
