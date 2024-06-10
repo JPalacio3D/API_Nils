@@ -16,7 +16,7 @@ from models.Security import Security
 #Entities
 from models.entities.User import User
 
-resend.api_key=os.environ["RESEND_API_KEY"]
+resend.api_key='re_6aRbi2A2_6YdBXZoKJzorDonsnCxLhsUe'
 
 app=Flask(__name__) #este parametro servira para saber si estamos ejecutando este archivo como principal
 #conexion=MySQL(app)
