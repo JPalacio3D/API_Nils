@@ -30,7 +30,7 @@ def conectar():
         db='b5xjtjc7ljbwo9pqw9ds'
     )
 #conexion = conectar()
-@app.route('/resetPass')
+@app.route('/resetPass', methods=['POST','GET'])
 def resetPass():
     token=request.args.get('token')
     print("token: " + token);
@@ -45,6 +45,9 @@ def resetPass():
                 return response, 401;
         except Exception as ex:
             print(ex)
+    else:
+        return jsonify({'mensaje': 'No se proporcionó ningún token'}), 400
+    
 @app.route('/login', methods=['POST','GET'])
 def login():
     conexion = conectar()
