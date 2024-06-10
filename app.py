@@ -92,10 +92,10 @@ def singin():
         cursor.close()
         
         params: resend.Emails.SendParams = {
-            "from": "Acme <onboarding@resend.dev>",
+            "from": "PERI-CAR <onboarding@resend.dev>",
             "to": [request.form['email']],
-            "subject": "Email de confirmación",
-            "html": "<strong>Enviar URL</strong>",
+            "subject": "Bienvenido a PERI-CAR",
+            "html": "<strong>Bienvenido a PERI-CAR!</br> Te has registrado correctamente, ya puedes disfrutar de nuestra APP.</strong>",
         }
         
         resend.Emails.send(params)
@@ -667,6 +667,39 @@ def obtenerImagen(code):
     except Exception as ex:
         print(ex)
         return jsonify({'success': False, 'mensaje': "No se ha podido obtener la imagen"})
+    finally:
+        conexion.close()
+        
+@app.route('/olvidopass',methods=['GET'])
+def olvidopass():
+    conexion = conectar()
+    try:
+        cursor = conexion.cursor()
+        
+        cursor.execute("SELECT * FROM User WHERE email = %s", (request.form['email']))
+        datos=cursor.fetchall()
+        if datos!=None:
+            encoded_token = Security.generate_token_pass(request.form['email'])
+
+            params: resend.Emails.SendParams = {
+                "from": "PERI-CAR <onboarding@resend.dev>",
+                "to": [request.form['email']],
+                "subject": "Cambiar contraseña",
+                "html": f"""
+                <strong>Se ha solicitado un cambio de contraseña. Si has sido tú, haz click </strong>
+                <br><br>
+                <a href="https://api-nils.onrender.com/resetpass?token={encoded_token}">AQUI</a>
+                """,
+            }
+            
+            resend.Emails.send(params)
+            
+            return jsonify({'success': True, 'mensaje':"Comprueba tu email." })
+        else:
+            return jsonify({'success': False,'mensaje':"No existe nungun usuario con este correo."})
+    except Exception as ex:
+        print(ex)
+        return jsonify({'success': False, 'mensaje': "No se ha podido comprobar el email"})
     finally:
         conexion.close()
     

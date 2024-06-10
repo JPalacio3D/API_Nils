@@ -19,6 +19,16 @@ class Security():
         return jwt.encode(payload,str(cls.secret),algorithm="HS256")
     
     @classmethod
+    def generate_token_pass(cls,email):
+        payload={
+            'iat':datetime.datetime.now(tz=cls.tz),#fecha de creacion del token
+            'exp':datetime.datetime.now(tz=cls.tz) + datetime.timedelta(minutes=10),
+            'email':email,
+            'roles': ['contraseña']
+        }
+        return jwt.encode(payload,str(cls.secret),algorithm="HS256")
+    
+    @classmethod
     def verify_token(cls,headers):
         if 'Authorization' in headers.keys():
             authorization = headers['Authorization']
