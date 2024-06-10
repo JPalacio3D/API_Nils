@@ -55,7 +55,8 @@ class Security():
             
             if '1' in roles or 'contraseña' in roles:
                 return True
-            return False
+            else:
+                return False
         except jwt.ExpiredSignatureError:
             # El token ha expirado
             return False

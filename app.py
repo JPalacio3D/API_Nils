@@ -41,8 +41,7 @@ def resetPass():
                 #return jsonify({'mensaje':"puedes cambiar la contraseña"})
                 return render_template('auth/reset.html')
             else:
-                response=jsonify({'mensaje':'no permitido'})
-                return response, 401;
+                return jsonify({'mensaje':'no permitido'})
         except Exception as ex:
             print(ex)
     else:
