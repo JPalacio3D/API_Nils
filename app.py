@@ -5,6 +5,8 @@ from werkzeug.security import generate_password_hash
 import pymysql
 import datetime
 import base64
+import resend
+import os
 #from src.database.db import get_connection
 
 #Models
@@ -13,6 +15,8 @@ from models.Security import Security
 
 #Entities
 from models.entities.User import User
+
+resend.api_key=os.environ["RESEND_API_KEY"]
 
 app=Flask(__name__) #este parametro servira para saber si estamos ejecutando este archivo como principal
 #conexion=MySQL(app)
@@ -86,6 +90,16 @@ def singin():
         cursor.execute(sql)
         conexion.commit() #confirma la accionde inserción
         cursor.close()
+        
+        params: resend.Emails.SendParams = {
+            "from": "Acme <onboarding@resend.dev>",
+            "to": [request.form['email']],
+            "subject": "Email de confirmación",
+            "html": "<strong>Enviar URL</strong>",
+        }
+        
+        resend.Emails.send(params)
+        
         return jsonify({'success':True,'mensaje':"Usuario registrado"})
     except Exception as ex:
         print("ex")
