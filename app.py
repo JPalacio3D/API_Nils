@@ -696,7 +696,7 @@ def olvidopass():
                 "subject": "Cambiar contraseña",
                 "html": f"""
                 <strong>Se ha solicitado un cambio de contraseña. Si has sido tú, haz click </strong>
-                <a href="https://api-nils.onrender.com/resetpass?token={encoded_token}">AQUI</a>
+                <a href="https://api-nils.onrender.com/resetPass?token={encoded_token}">AQUI</a>
                 """,
             }
             
