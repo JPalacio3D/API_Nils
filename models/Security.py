@@ -45,8 +45,8 @@ class Security():
                 return False
         return False
     
-    def verify_token_pass(cls,headers):
-        encouded_token=headers
+    def verify_token_pass(cls,token):
+        encouded_token=token
         
         try:
             payload=jwt.decode(encouded_token,cls.secret,algorithms=["HS256"])

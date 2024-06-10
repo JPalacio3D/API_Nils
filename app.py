@@ -7,6 +7,7 @@ import datetime
 import base64
 import resend
 import os
+import requests
 #from src.database.db import get_connection
 
 #Models
@@ -32,8 +33,7 @@ def conectar():
 @app.route('/resetPass')
 def resetPass():
     try:
-        token=request.args.get('token')
-        has_access = Security.verify_token_pass(token);
+        has_access = Security.verify_token(request.headers);
         if has_access:
             #return jsonify({'mensaje':"puedes cambiar la contraseña"})
             return render_template('auth/reset.html')
@@ -690,14 +690,20 @@ def olvidopass():
         datos=cursor.fetchall()
         if datos!=None:
             encoded_token = Security.generate_token_pass(request.form['email'])
+            url="https://api-nils.onrender.com/resetPass"
+            headers={
+                "Authorization": f"Bearer {encoded_token}"
+            }
 
+            response = requests.get(url,headers=headers)
+            
             params: resend.Emails.SendParams = {
                 "from": "PERI-CAR <onboarding@resend.dev>",
                 "to": [request.form['email']],
                 "subject": "Cambiar contraseña",
                 "html": f"""
                 <strong>Se ha solicitado un cambio de contraseña. Si has sido tú, haz click </strong>
-                <a href="https://api-nils.onrender.com/resetPass?token={encoded_token}">AQUI</a>
+                <a href={response}">AQUI</a>
                 """,
             }
             
