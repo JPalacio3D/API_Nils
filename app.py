@@ -35,7 +35,8 @@ def resetPass():
         token=request.args.get('token')
         has_access = Security.verify_token(token);
         if has_access:
-            return render_template('auth/reset.html')
+            return jsonify({'mensaje':"puedes cambiar la contraseña"})
+            #return render_template('auth/reset.html')
         else:
             response=jsonify({'mensaje':'no permitido'})
             return response, 401;
