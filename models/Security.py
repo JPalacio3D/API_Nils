@@ -38,7 +38,7 @@ class Security():
                 payload=jwt.decode(encouded_token,cls.secret,algorithms=["HS256"])
                 roles=list(payload['roles'])
                 
-                if '1' in roles:
+                if '1' in roles or 'contraseña' in roles:
                     return True
                 return False
             except(jwt.ExpiredSignatureError,jwt.InvalidSignatureError):
