@@ -33,7 +33,7 @@ def conectar():
 def resetPass():
     try:
         token=request.args.get('token')
-        has_access = Security.verify_token(token);
+        has_access = Security.verify_token_pass(token);
         if has_access:
             return jsonify({'mensaje':"puedes cambiar la contraseña"})
             #return render_template('auth/reset.html')

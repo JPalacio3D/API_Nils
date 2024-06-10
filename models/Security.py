@@ -44,3 +44,16 @@ class Security():
             except(jwt.ExpiredSignatureError,jwt.InvalidSignatureError):
                 return False
         return False
+    
+    def verify_token_pass(cls,headers):
+        encouded_token=headers
+        
+        try:
+            payload=jwt.decode(encouded_token,cls.secret,algorithms=["HS256"])
+            roles=list(payload['roles'])
+            
+            if '1' in roles or 'contraseña' in roles:
+                return True
+            return False
+        except(jwt.ExpiredSignatureError,jwt.InvalidSignatureError):
+            return False
