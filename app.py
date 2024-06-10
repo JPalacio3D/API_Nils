@@ -32,16 +32,19 @@ def conectar():
 #conexion = conectar()
 @app.route('/resetPass')
 def resetPass():
-    try:
-        has_access = Security.verify_token(request.headers);
-        if has_access:
-            #return jsonify({'mensaje':"puedes cambiar la contraseña"})
-            return render_template('auth/reset.html')
-        else:
-            response=jsonify({'mensaje':'no permitido'})
-            return response, 401;
-    except Exception as ex:
-        print(ex)
+    token=request.args.get('token')
+    print("token: " + token);
+    if token:
+        try:
+            has_access = Security.verify_token_pass(token);
+            if has_access:
+                #return jsonify({'mensaje':"puedes cambiar la contraseña"})
+                return render_template('auth/reset.html')
+            else:
+                response=jsonify({'mensaje':'no permitido'})
+                return response, 401;
+        except Exception as ex:
+            print(ex)
 @app.route('/login', methods=['POST','GET'])
 def login():
     conexion = conectar()
@@ -695,7 +698,7 @@ def olvidopass():
                 "Authorization": f"Bearer {encoded_token}"
             }
 
-            response = requests.get(url,headers=headers)
+            url_token=f"{url}?token={encoded_token}"
             
             params: resend.Emails.SendParams = {
                 "from": "PERI-CAR <onboarding@resend.dev>",
@@ -703,7 +706,7 @@ def olvidopass():
                 "subject": "Cambiar contraseña",
                 "html": f"""
                 <strong>Se ha solicitado un cambio de contraseña. Si has sido tú, haz click </strong>
-                <a href={response}">AQUI</a>
+                <a href={url_token}">AQUI</a>
                 """,
             }
             
