@@ -670,7 +670,7 @@ def obtenerImagen(code):
     finally:
         conexion.close()
         
-@app.route('/olvidopass',methods=['GET'])
+@app.route('/olvidopass',methods=['GET','POST'])
 def olvidopass():
     conexion = conectar()
     try:
