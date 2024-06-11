@@ -32,20 +32,16 @@ def conectar():
 #conexion = conectar()
 @app.route('/resetPass', methods=['POST','GET'])
 def resetPass():
-    token=request.args.get('token')
-    print("token: " + token);
-    if token:
-        try:
-            has_access = Security.verify_token_pass(token);
-            if has_access:
-                return jsonify({'mensaje':"puedes cambiar la contraseña"})
-                #return render_template('auth/reset.html')
-            else:
-                return jsonify({'mensaje':'no permitido'})
-        except Exception as ex:
-            print(ex)
-    else:
-        return jsonify({'mensaje': 'No se proporcionó ningún token'}), 400
+    
+    try:
+        has_access = Security.verify_token_pass(request.args.get('token'));
+        if has_access:
+            return jsonify({'mensaje':"puedes cambiar la contraseña"})
+            #return render_template('auth/reset.html')
+        else:
+            return jsonify({'mensaje':'no permitido'})
+    except Exception as ex:
+        print(ex)
     
 @app.route('/login', methods=['POST','GET'])
 def login():
