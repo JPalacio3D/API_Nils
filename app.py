@@ -36,8 +36,8 @@ def resetPass():
     try:
         has_access = Security.verify_token_pass(request.args.get('token'));
         if has_access:
-            return jsonify({'mensaje':"puedes cambiar la contraseña"})
-            #return render_template('auth/reset.html')
+            #return jsonify({'mensaje':"puedes cambiar la contraseña"})
+            return render_template('auth/reset.html')
         else:
             return jsonify({'mensaje':'no permitido'})
     except Exception as ex:
@@ -478,7 +478,11 @@ def load(code):
                 sql_cliente = "SELECT nombre FROM Clientes WHERE idClientes = '{0}'".format(idCliente)
                 cursor.execute(sql_cliente)
                 nombre_cliente = cursor.fetchone()[0]
-                datosCompletos={'id':id['id'],'cliente':nombre_cliente,'fecha':id['fecha']}
+                idperitaje = id['id']
+                sql_matricula = "SELECT matricula FROM coches_peritaje WHERE idperitaje = '{0}'".format(idperitaje)
+                cursor.execute(sql_matricula)
+                matricula = cursor.fetchone()[0]
+                datosCompletos={'id':id['id'],'cliente':nombre_cliente,'matricula':matricula,'fecha':id['fecha']}
                 peritajesCompletos.append(datosCompletos)
             cursor.close()
             return jsonify({'success':True,'datos':peritajesCompletos})
@@ -592,7 +596,11 @@ def buscarPeritaje(code):
                     sql_cliente = "SELECT nombre FROM Clientes WHERE idClientes = '{0}'".format(idCliente)
                     cursor.execute(sql_cliente)
                     nombre_cliente = cursor.fetchone()[0]
-                    datosCompletos={'id':id['id'],'cliente':nombre_cliente,'fecha':id['fecha']}
+                    idperitaje = id['id']
+                    sql_matricula = "SELECT matricula FROM coches_peritaje WHERE idperitaje = '{0}'".format(idperitaje)
+                    cursor.execute(sql_matricula)
+                    matricula = cursor.fetchone()[0]
+                    datosCompletos={'id':id['id'],'cliente':nombre_cliente,'matricula':matricula,'fecha':id['fecha']}
                     peritajesCompletos.append(datosCompletos)
                 cursor.close()
                 return jsonify({'success':True,'datos':peritajesCompletos})
