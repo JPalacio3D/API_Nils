@@ -19,16 +19,6 @@ class Security():
         return jwt.encode(payload,str(cls.secret),algorithm="HS256")
     
     @classmethod
-    def generate_token_pass(cls,email):
-        payload={
-            'iat':datetime.datetime.now(tz=cls.tz),#fecha de creacion del token
-            'exp':datetime.datetime.now(tz=cls.tz) + datetime.timedelta(minutes=10),
-            'email':email,
-            'roles': ['contraseña']
-        }
-        return jwt.encode(payload,str(cls.secret),algorithm="HS256")
-    
-    @classmethod
     def verify_token(cls,headers):
         if 'Authorization' in headers.keys():
             authorization = headers['Authorization']
@@ -46,15 +36,27 @@ class Security():
         return False
     
     @classmethod
+    def generate_token_pass(cls,email):
+        payload={
+            'iat':datetime.datetime.now(tz=cls.tz),#fecha de creacion del token
+            'exp':datetime.datetime.now(tz=cls.tz) + datetime.timedelta(minutes=10),
+            'email':email,
+            'roles': ['contraseña']
+        }
+        return jwt.encode(payload,str(cls.secret),algorithm="HS256")
+    
+    
+    @classmethod
     def verify_token_pass(cls,token):
         if not token:
             return False
         
         try:
             print(token)
-            payload=jwt.decode(token,cls.secret,algorithms=["HS256"])
-            roles=list(payload['roles'])
-            print("roles: "+roles[0])
+            payload = jwt.decode(token, str(cls.secret), algorithms=["HS256"])
+            roles = payload.get('roles', [])
+            print("roles: " + ', '.join(roles))
+            
             if '1' in roles or 'contraseña' in roles:
                 return True
             else:
