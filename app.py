@@ -38,8 +38,8 @@ def resetPass():
         try:
             has_access = Security.verify_token_pass(token);
             if has_access:
-                #return jsonify({'mensaje':"puedes cambiar la contraseña"})
-                return render_template('auth/reset.html')
+                return jsonify({'mensaje':"puedes cambiar la contraseña"})
+                #return render_template('auth/reset.html')
             else:
                 return jsonify({'mensaje':'no permitido'})
         except Exception as ex:
