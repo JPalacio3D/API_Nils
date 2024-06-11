@@ -706,7 +706,7 @@ def olvidopass():
                 "subject": "Cambiar contraseña",
                 "html": f"""
                 <strong>Se ha solicitado un cambio de contraseña. Si has sido tú, haz click </strong>
-                <a href={url_token}">AQUI</a>
+                <a href={url_token}>AQUI</a>
                 """,
             }
             
