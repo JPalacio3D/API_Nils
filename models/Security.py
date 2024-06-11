@@ -55,15 +55,18 @@ class Security():
             print(token)
             payload = jwt.decode(token, str(cls.secret), algorithms=["HS256"])
             roles = payload.get('roles', [])
-            print("roles: " + ', '.join(roles))
+            print(f"Roles: {roles}")
             
             if '1' in roles or 'contraseña' in roles:
                 return True
             else:
+                print("sin roles")
                 return False
         except jwt.ExpiredSignatureError:
             # El token ha expirado
+            print("El token ha expirado")
             return False
         except (jwt.InvalidSignatureError, jwt.InvalidTokenError):
             # El token es inválido
+            print("El token es inválido")
             return False
