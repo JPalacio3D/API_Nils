@@ -54,7 +54,7 @@ class Security():
             print(token)
             payload=jwt.decode(token,cls.secret,algorithms=["HS256"])
             roles=list(payload['roles'])
-            
+            print(roles)
             if '1' in roles or 'contraseña' in roles:
                 return True
             else:
