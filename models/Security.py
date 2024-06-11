@@ -45,6 +45,7 @@ class Security():
                 return False
         return False
     
+    @classmethod
     def verify_token_pass(cls,token):
         if not token:
             return False
