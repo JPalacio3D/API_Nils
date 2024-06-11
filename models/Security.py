@@ -50,6 +50,7 @@ class Security():
             return False
         
         try:
+            print(token)
             payload=jwt.decode(token,cls.secret,algorithms=["HS256"])
             roles=list(payload['roles'])
             
