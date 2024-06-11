@@ -695,6 +695,8 @@ def olvidopass():
             headers={
                 "Authorization": f"Bearer {encoded_token}"
             }
+            print("encoded token")
+            print(encoded_token)
 
             url_token=f"{url}?token={encoded_token}"
             

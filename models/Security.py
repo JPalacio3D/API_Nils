@@ -68,5 +68,6 @@ class Security():
             return False
         except (jwt.InvalidSignatureError, jwt.InvalidTokenError):
             # El token es inválido
+            print(Exception)
             print("El token es inválido")
             return False
