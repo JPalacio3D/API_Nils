@@ -55,7 +55,7 @@ def wbechangepass():
         cursor.execute(sql)
         conexion.commit() #confirma la accionde inserción
         cursor.close()
-        return jsonify({'success':True,'mensaje':"Contraseña Cambiada"})
+        return render_template('auth/confirmacion.html')
     except Exception as ex:
         print("ex")
         print(ex)

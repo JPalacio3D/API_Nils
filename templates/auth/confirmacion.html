@@ -1,0 +1,11 @@
+{% extends './base.html' %}
+{% block title %}Reset{% endblock title %}
+
+{% block customCSS %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/reset.css') }}">
+{% endblock customCSS %}
+
+{% block body %}
+<img class="mb-4 icono" src="{{ url_for('static', filename='img/icono_peritajes.png') }}" alt="" width="300" height="300">
+<h1 class="h3 mb-3 fw-normal">La contraseña ha sido cambiada</h1>
+{% endblock body %}
