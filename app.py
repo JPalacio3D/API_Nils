@@ -43,6 +43,10 @@ def resetPass():
     except Exception as ex:
         print(ex)
         
+@app.route('/verweb')
+def verweb():
+    return render_template('auth/confirmacion.html')
+        
 @app.route('/WebChangePass', methods=['POST'])
 def wbechangepass():
     conexion=conectar()
