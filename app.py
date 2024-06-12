@@ -570,6 +570,7 @@ def buscarPeritaje(code):
     try:
         cursor = conexion.cursor()
         name = request.args.get('name')
+        print(name)
         
         sql="SELECT idCLientes FROM Clientes WHERE iduser = '{0}' AND nombre = '{1}'".format(
             code,
