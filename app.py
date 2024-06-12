@@ -578,6 +578,7 @@ def buscarPeritaje(code):
         )
         cursor.execute(sql)
         idcliente = cursor.fetchone()
+        print(idcliente)
         if idcliente != None:
             sql="SELECT * FROM peritajes WHERE iduserP = '{0}' AND idcliente = '{1}'".format(
                 code,
