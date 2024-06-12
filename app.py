@@ -42,6 +42,26 @@ def resetPass():
             return jsonify({'mensaje':'no permitido'})
     except Exception as ex:
         print(ex)
+        
+@app.route('/WebChangePass', methods=['POST'])
+def wbechangepass():
+    conexion=conectar()
+    try:
+        cursor=conexion.cursor()
+        sql="""UPDATE User SET pasword = '{1}' 
+        WHERE email = '{0}'""".format(
+            request.form['email'],
+            generate_password_hash(request.form['password']))
+        cursor.execute(sql)
+        conexion.commit() #confirma la accionde inserción
+        cursor.close()
+        return jsonify({'success':True,'mensaje':"Contraseña Cambiada"})
+    except Exception as ex:
+        print("ex")
+        print(ex)
+        return jsonify({'mensaje':"error",'error':str(ex)}),500
+    finally:
+        conexion.close()  
     
 @app.route('/login', methods=['POST','GET'])
 def login():
