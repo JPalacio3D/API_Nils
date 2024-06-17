@@ -502,10 +502,13 @@ def load(code):
                 sql_cliente = "SELECT nombre FROM Clientes WHERE idClientes = '{0}'".format(idCliente)
                 cursor.execute(sql_cliente)
                 nombre_cliente = cursor.fetchone()[0]
+                print(nombre_cliente)
                 idperitaje = id['id']
+                print(idperitaje)
                 sql_matricula = "SELECT matricula FROM coches_peritaje WHERE idperitaje = '{0}'".format(idperitaje)
                 cursor.execute(sql_matricula)
                 matricula = cursor.fetchone()[0]
+                print(matricula)
                 datosCompletos={'id':id['id'],'cliente':nombre_cliente,'matricula':matricula,'fecha':id['fecha']}
                 peritajesCompletos.append(datosCompletos)
             cursor.close()
@@ -624,9 +627,11 @@ def buscarPeritaje(code):
                     cursor.execute(sql_cliente)
                     nombre_cliente = cursor.fetchone()[0]
                     idperitaje = id['id']
+                    print(idperitaje)
                     sql_matricula = "SELECT matricula FROM coches_peritaje WHERE idperitaje = '{0}'".format(idperitaje)
                     cursor.execute(sql_matricula)
                     matricula = cursor.fetchone()[0]
+                    print(matricula)
                     datosCompletos={'id':id['id'],'cliente':nombre_cliente,'matricula':matricula,'fecha':id['fecha']}
                     peritajesCompletos.append(datosCompletos)
                 cursor.close()
