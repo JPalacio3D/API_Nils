@@ -499,17 +499,29 @@ def load(code):
             
             for id in peritajes:
                 idCliente = id['Cliente']
-                sql_cliente = "SELECT nombre FROM Clientes WHERE idClientes = '{0}'".format(idCliente)
-                cursor.execute(sql_cliente)
-                nombre_cliente = cursor.fetchone()[0]
-                print(nombre_cliente)
+                sql_cliente = "SELECT nombre FROM Clientes WHERE idClientes = %s"
+                cursor.execute(sql_cliente, (idCliente,))
+                result_cliente = cursor.fetchone()
+                
+                if result_cliente is None:
+                    continue  # Si no se encuentra el cliente, continuar con el siguiente
+
+                nombre_cliente = result_cliente[0]
                 idperitaje = id['id']
-                print(idperitaje)
-                sql_matricula = "SELECT matricula FROM coches_peritaje WHERE idperitaje = '{0}'".format(idperitaje)
-                cursor.execute(sql_matricula)
-                matricula = cursor.fetchone()[0]
-                print(matricula)
-                datosCompletos={'id':id['id'],'cliente':nombre_cliente,'matricula':matricula,'fecha':id['fecha']}
+                sql_matricula = "SELECT matricula FROM coches_peritaje WHERE idperitaje = %s"
+                cursor.execute(sql_matricula, (idperitaje,))
+                result_matricula = cursor.fetchone()
+
+                if result_matricula is None:
+                    continue  # Si no se encuentra la matrícula, continuar con el siguiente
+
+                matricula = result_matricula[0]
+                datosCompletos = {
+                    'id': id['id'],
+                    'cliente': nombre_cliente,
+                    'matricula': matricula,
+                    'fecha': id['fecha']
+                }
                 peritajesCompletos.append(datosCompletos)
             cursor.close()
             return jsonify({'success':True,'datos':peritajesCompletos})
@@ -623,16 +635,29 @@ def buscarPeritaje(code):
                 
                 for id in peritajes:
                     idCliente = id['Cliente']
-                    sql_cliente = "SELECT nombre FROM Clientes WHERE idClientes = '{0}'".format(idCliente)
-                    cursor.execute(sql_cliente)
-                    nombre_cliente = cursor.fetchone()[0]
+                    sql_cliente = "SELECT nombre FROM Clientes WHERE idClientes = %s"
+                    cursor.execute(sql_cliente, (idCliente,))
+                    result_cliente = cursor.fetchone()
+                
+                    if result_cliente is None:
+                        continue  # Si no se encuentra el cliente, continuar con el siguiente
+
+                    nombre_cliente = result_cliente[0]
                     idperitaje = id['id']
-                    print(idperitaje)
-                    sql_matricula = "SELECT matricula FROM coches_peritaje WHERE idperitaje = '{0}'".format(idperitaje)
-                    cursor.execute(sql_matricula)
-                    matricula = cursor.fetchone()[0]
-                    print(matricula)
-                    datosCompletos={'id':id['id'],'cliente':nombre_cliente,'matricula':matricula,'fecha':id['fecha']}
+                    sql_matricula = "SELECT matricula FROM coches_peritaje WHERE idperitaje = %s"
+                    cursor.execute(sql_matricula, (idperitaje,))
+                    result_matricula = cursor.fetchone()
+
+                    if result_matricula is None:
+                        continue  # Si no se encuentra la matrícula, continuar con el siguiente
+
+                    matricula = result_matricula[0]
+                    datosCompletos = {
+                        'id': id['id'],
+                        'cliente': nombre_cliente,
+                        'matricula': matricula,
+                        'fecha': id['fecha']
+                    }
                     peritajesCompletos.append(datosCompletos)
                 cursor.close()
                 return jsonify({'success':True,'datos':peritajesCompletos})
