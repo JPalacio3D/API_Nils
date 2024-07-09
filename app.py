@@ -358,11 +358,12 @@ def save():
     try:
         cursor=conexion.cursor()
         #CREAMOS "LA FICHA" DE PERITAJE
-        sql="""INSERT INTO peritajes (iduserP, idcliente, fecha_creacion) 
-        VALUES ('{0}', '{1}', '{2}')""".format(
+        sql="""INSERT INTO peritajes (iduserP, idcliente, fecha_creacion, descuento) 
+        VALUES ('{0}', '{1}', '{2}', '{3}')""".format(
             request.form['iduser'],
             request.form['idcliente'],
-            request.form['fecha'])
+            request.form['fecha'],
+            float(request.form['descuento']))
         cursor.execute(sql)
         conexion.commit()
         # Obtienes el ID del último registro insertado
@@ -445,8 +446,9 @@ def update(code):
     conexion = conectar()
     try:
         cursor=conexion.cursor()
-        sql="UPDATE peritajes SET fecha_creacion = '{0}' WHERE idperitajes = '{1}' ".format(
+        sql="UPDATE peritajes SET fecha_creacion = '{0}', descuento = '{1}' WHERE idperitajes = '{2}' ".format(
             request.form['fecha'],
+            float(request.form['descuento']),
             code
         )
         cursor.execute(sql)
@@ -494,7 +496,7 @@ def load(code):
         peritajesCompletos=[]
         if datos != None:
             for fila in datos:
-                datosPeritaje={'id':fila[0],'Cliente':fila[2],'fecha':fila[3]}
+                datosPeritaje={'id':fila[0],'Cliente':fila[2],'descuento':fila[3],'fecha':fila[4]}
                 peritajes.append(datosPeritaje)
             
             for id in peritajes:
@@ -630,7 +632,7 @@ def buscarPeritaje(code):
             peritajesCompletos=[]
             if datos != None:
                 for fila in datos:
-                    datosPeritaje={'id':fila[0],'Cliente':fila[2],'fecha':fila[3]}
+                    datosPeritaje={'id':fila[0],'Cliente':fila[2],'fecha':fila[4],'descuento':fila[3]}
                     peritajes.append(datosPeritaje)
                 
                 for id in peritajes:
