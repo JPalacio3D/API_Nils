@@ -522,7 +522,8 @@ def load(code):
                     'id': id['id'],
                     'cliente': nombre_cliente,
                     'matricula': matricula,
-                    'fecha': id['fecha']
+                    'fecha': id['fecha'],
+                    'descuento': id['descuento']
                 }
                 peritajesCompletos.append(datosCompletos)
             cursor.close()
@@ -658,7 +659,8 @@ def buscarPeritaje(code):
                         'id': id['id'],
                         'cliente': nombre_cliente,
                         'matricula': matricula,
-                        'fecha': id['fecha']
+                        'fecha': id['fecha'],
+                        'descuento': id['descuento']
                     }
                     peritajesCompletos.append(datosCompletos)
                 cursor.close()
