@@ -789,7 +789,7 @@ def olvidopass():
         return jsonify({'success': False, 'mensaje': "No se ha podido comprobar el email"})
     finally:
         conexion.close()
-@app.route('eliminar_cuenta')
+@app.route('/eliminar_cuenta')
 def webDelete():
     return render_template('auth/eliminarCuenta.html')
 @app.route('/delete',methods=['GET','POST'])
