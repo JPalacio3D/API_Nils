@@ -56,3 +56,32 @@ body {
   border-top-left-radius: 0;
   border-top-right-radius: 0;
 }
+
+.form-delete .h3{
+  color: white;
+  font-size: 24px;
+  text-align: center;
+}
+
+.form-delete {
+  width: 100%;
+  max-width: 530px;
+  padding: 15px;
+  margin: auto;
+}
+
+.form-delete .form-floating:focus-within {
+  z-index: 2;
+}
+
+.form-delete input[type="username"] {
+  margin-bottom: -1px;
+  border-bottom-right-radius: 0;
+  border-bottom-left-radius: 0;
+}
+
+.form-delete input[type="password"] {
+  margin-bottom: 10px;
+  border-top-left-radius: 0;
+  border-top-right-radius: 0;
+}

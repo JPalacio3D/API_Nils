@@ -770,7 +770,7 @@ def olvidopass():
             url_token=f"{url}?token={encoded_token}"
             
             params: resend.Emails.SendParams = {
-                "from": "PERI-CAR <onboarding@resend.dev>",
+                "from": "PERI-CAR <info@imjpalacio.com>",
                 "to": [request.form['email']],
                 "subject": "Cambiar contraseña",
                 "html": f"""
@@ -789,6 +789,35 @@ def olvidopass():
         return jsonify({'success': False, 'mensaje': "No se ha podido comprobar el email"})
     finally:
         conexion.close()
+@app.route('eliminar_cuenta')
+def webDelete():
+    return render_template('auth/eliminarCuenta.html')
+@app.route('/delete',methods=['GET','POST'])
+def delete():
+    conexion = conectar()
+    try:
+         # Primero verificamos las credenciales del usuario
+        username = request.form['username']
+        password = request.form['password']
+        user = User(0, username, password, None, None)
+        logged_user = ModelUser.login(conexion, user)
+        
+        if logged_user is not None:
+            if logged_user.pasword:  # Verificamos la contraseña
+                # Procedemos con la eliminación de la cuenta
+                cursor = conexion.cursor()
+                sql = "DELETE FROM User WHERE idUser = %s"
+                cursor.execute(sql, (logged_user.idUser,))
+                conexion.commit()
+                return jsonify({'success': True, 'mensaje': "Cuenta eliminada con éxito"})
+            else:
+                return jsonify({'success': False, 'mensaje': "Contraseña incorrecta"})
+        else:
+            return jsonify({'success': False, 'mensaje': "Usuario no encontrado"})
+    except Exception as ex:
+        print(ex)
+        return jsonify({'success': False, 'mensaje': "No se ha podido eliminar la cuenta"})
+
     
 def pagina_no_encontrada(error):
     return "<h1>La página no existe</h1>", 404
