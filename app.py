@@ -843,4 +843,4 @@ if __name__=='__main__':
     app.register_error_handler(404,pagina_no_encontrada)#para manejar errores
     app.register_error_handler(409,None)
     app.register_error_handler(500,None)
-    app.run(debug=os.getenv('FLASK_DEBUG', 'False') == 'True', host='0.0.0.0', port=int(os.getenv('PORT', 5000)))
+    app.run()
