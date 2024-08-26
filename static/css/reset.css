@@ -21,6 +21,7 @@ body {
 
 .icono {
   margin-bottom: 20px; /* Ajusta este valor según la separación que desees */
+  align-items: center;
 }
 
 .h4{

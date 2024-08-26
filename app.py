@@ -1,6 +1,7 @@
 from flask import Flask,jsonify,request,render_template
 #from flask_mysqldb import MySQL
 from config import config
+from dotenv import load_dotenv
 from werkzeug.security import generate_password_hash
 import pymysql
 import datetime
@@ -17,17 +18,19 @@ from models.Security import Security
 #Entities
 from models.entities.User import User
 
-resend.api_key='re_6aRbi2A2_6YdBXZoKJzorDonsnCxLhsUe'
+load_dotenv()
+
+resend.api_key = os.getenv('RESEND_API_KEY')
 
 app=Flask(__name__) #este parametro servira para saber si estamos ejecutando este archivo como principal
 #conexion=MySQL(app)
 # Define la función de conexión
 def conectar():
     return pymysql.connect(
-        host='b5xjtjc7ljbwo9pqw9ds-mysql.services.clever-cloud.com',
-        user='ugxkrton3nwnoe1m',
-        password='CnqN1HBzgsypNbZkldpd',
-        db='b5xjtjc7ljbwo9pqw9ds'
+        host=os.getenv('DB_HOST'),
+        user=os.getenv('DB_USER'),
+        password=os.getenv('DB_PASSWORD'),
+        db=os.getenv('DB_NAME')
     )
 #conexion = conectar()
 @app.route('/resetPass', methods=['POST','GET'])
@@ -817,7 +820,19 @@ def delete():
     except Exception as ex:
         print(ex)
         return jsonify({'success': False, 'mensaje': "No se ha podido eliminar la cuenta"})
-
+@app.route('/deletePeritaje/<code>',methods=['GET','POST'])
+def deletePeritaje(code):
+    conexion = conectar()
+    try:
+        
+        cursor = conexion.cursor()
+        sql = "DELETE FROM peritajes WHERE idperitajes = %s"
+        cursor.execute(sql, (code))
+        conexion.commit()
+        return jsonify({'success': True, 'mensaje': "Peritaje eliminado"})
+    except Exception as ex:
+        print(ex)
+        return jsonify({'success': False, 'mensaje': "No se ha podido eliminar el peritaje"})
     
 def pagina_no_encontrada(error):
     return "<h1>La página no existe</h1>", 404
@@ -828,4 +843,4 @@ if __name__=='__main__':
     app.register_error_handler(404,pagina_no_encontrada)#para manejar errores
     app.register_error_handler(409,None)
     app.register_error_handler(500,None)
-    app.run()
+    app.run(debug=os.getenv('FLASK_DEBUG', 'False') == 'True', host='0.0.0.0', port=int(os.getenv('PORT', 5000)))
