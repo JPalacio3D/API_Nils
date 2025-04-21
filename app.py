@@ -9,6 +9,7 @@ import base64
 import resend
 import os
 import requests
+import re
 #from src.database.db import get_connection
 
 #Models
@@ -74,19 +75,41 @@ def wbechangepass():
 def login():
     conexion = conectar()
     try:
-        username = request.form['username']
+        identifier = request.form['username']  # Puede ser username o email
         password = request.form['password']
-        user = User(0,username,password,None,None)
-        logged_user=ModelUser.login(conexion,user)
-        if logged_user!=None:
-            if logged_user.pasword:
-                encoded_token = Security.generate_token(logged_user)
-                data = {'id':logged_user.idUser,'username':logged_user.userName,'email':logged_user.email,'IsAdmin':logged_user.IsAdmin}
-                return jsonify({'success': True, 'token': encoded_token,'mensaje':"loged",'data':data})
-            else:
-                return jsonify({'success': False,'mensaje':"Invalid password"})
+        
+        # Verificar si el identificador es un email
+        email_regex = r'^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$'
+        is_email = re.match(email_regex, identifier)
+        
+        cursor = conexion.cursor()
+        
+        if is_email:
+            sql = "SELECT idUser, userName, pasword, email, IsAdmin FROM User WHERE email = %s"
         else:
-            return jsonify({'success': False,'mensaje':"User not found"})
+            sql = "SELECT idUser, userName, pasword, email, IsAdmin FROM User WHERE userName = %s"
+
+        cursor.execute(sql, (identifier,))
+        data = cursor.fetchone()
+        
+        if data:
+            idUser, userName, pasword_hash, email, isAdmin = data
+            user = User(idUser, userName, password, email, isAdmin)
+            logged_user = ModelUser.login(conexion, user)
+
+            if logged_user and logged_user.pasword:
+                encoded_token = Security.generate_token(logged_user)
+                data = {
+                    'id': logged_user.idUser,
+                    'username': logged_user.userName,
+                    'email': logged_user.email,
+                    'IsAdmin': logged_user.IsAdmin
+                }
+                return jsonify({'success': True, 'token': encoded_token, 'mensaje': "Logueado correctamente", 'data': data})
+            else:
+                return jsonify({'success': False, 'mensaje': "Contraseña inválida"})
+        else:
+            return jsonify({'success': False, 'mensaje': "Usuario no encontrado"})
     except Exception as ex:
         print(ex)
         return jsonify({'success':False,'mensaje':"Error de servidor"}), 500
@@ -117,17 +140,27 @@ def cambiarPass(code):
 @app.route('/singin', methods=['POST'])   
 def singin():   
     conexion = conectar()  
+    cursor = None
     try:
-        cursor=conexion.cursor()
-        sql="""INSERT INTO User (userName, pasword, email, IsAdmin)
-          VALUES ('{0}', '{1}', '{2}', '{3}')""".format(
-              request.form['userName'],
-              generate_password_hash(request.form['password']),
-              request.form['email'],
-              request.form['IsAdmin'])
-        cursor.execute(sql)
-        conexion.commit() #confirma la accionde inserción
-        cursor.close()
+         # Obtener datos del formulario
+        userName = request.form['userName']
+        password = request.form['password']
+        email = request.form['email']
+        isAdmin = request.form['IsAdmin']
+        
+        # Validación del email
+        email_regex = r'^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$'
+        if not re.match(email_regex, email):
+            return jsonify({'success': False, 'mensaje': "Correo electrónico no válido"}), 400
+        
+        # Encriptar la contraseña
+        hashed_password = generate_password_hash(password)
+        
+        cursor = conexion.cursor()
+        sql = """INSERT INTO User (userName, pasword, email, IsAdmin) 
+                 VALUES (%s, %s, %s, %s)"""
+        cursor.execute(sql, (userName, hashed_password, email, isAdmin))
+        conexion.commit()  # Confirmar la inserción
         
         params: resend.Emails.SendParams = {
             "from": "PERI-CAR <onboarding@resend.dev>",
@@ -151,7 +184,7 @@ def singin():
             return jsonify({'mensaje':"Email ya registrado",'error':str(ex)}),500
         else:
             cursor.close()
-            return jsonify({'mensaje':"error",'error':str(ex)}),500
+            return jsonify({'mensaje':"error en el registro",'error':str(ex)}),500
     finally:
         conexion.close()   
 
