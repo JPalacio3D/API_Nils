@@ -387,12 +387,35 @@ def guardarDatos():
         print(ex)
         return "error"
     finally:
-        conexion.close()   
+        conexion.close() 
+
+def contar_peritajes_hoy(iduser, conexion):
+    cursor = conexion.cursor()
+    hoy = datetime.datetime.now().strftime('%Y-%m-%d')
+    sql = """SELECT COUNT(*) FROM peritajes 
+             WHERE iduserP = %s AND DATE(fecha_creacion) = %s"""
+    cursor.execute(sql, (iduser, hoy))
+    resultado = cursor.fetchone()[0]
+    cursor.close()
+    return resultado
+  
 @app.route('/save',methods=['POST'])
 def save():
     conexion = conectar()
     try:
-        cursor=conexion.cursor()
+        cursor = conexion.cursor()
+        iduser = request.form['iduser']
+        app_key = request.headers.get('Z-APP-KEY', 'GRATIS-1234')  # valor por defecto: gratuita
+
+        # Si es app gratuita (por defecto o explícitamente)
+        if app_key != 'PREMIUM-5678':
+            max_por_dia = 15  # límite configurable
+            creados = contar_peritajes_hoy(iduser, conexion)
+            if creados >= max_por_dia:
+                return jsonify({
+                    'success': False,
+                    'mensaje': f'Límite diario de {max_por_dia} peritajes alcanzado. Usa la versión premium para ilimitados.'
+                })
         #CREAMOS "LA FICHA" DE PERITAJE
         sql="""INSERT INTO peritajes (iduserP, idcliente, fecha_creacion, descuento) 
         VALUES ('{0}', '{1}', '{2}', '{3}')""".format(
