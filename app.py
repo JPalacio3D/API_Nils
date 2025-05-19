@@ -583,11 +583,26 @@ def load(code):
                 matricula = result_matricula[0]
                 # Formateamos la fecha en formato dd/MM/yyyy para Unity
                 try:
-                    fecha_obj = id['fecha']
-                    if isinstance(fecha_obj, str):
-                        # Intenta parsear si viene como string ISO (por ejemplo: '2025-05-19T12:00:00')
-                        fecha_obj = datetime.datetime.fromisoformat(fecha_obj)
-                    fecha_str = fecha_obj.strftime('%d/%m/%Y')
+                    fecha_raw = id['fecha']
+                    fecha_str = "00/00/0000"
+
+                    try:
+                        if isinstance(fecha_raw, datetime.datetime):
+                            fecha_str = fecha_raw.strftime('%d/%m/%Y')
+                        elif isinstance(fecha_raw, str):
+                            try:
+                                # Intentar formato ISO: '2025-05-19T14:35:00'
+                                fecha_obj = datetime.datetime.fromisoformat(fecha_raw)
+                                fecha_str = fecha_obj.strftime('%d/%m/%Y')
+                            except ValueError:
+                                try:
+                                    # Intentar formato antiguo: '19/05/2025'
+                                    fecha_obj = datetime.datetime.strptime(fecha_raw, "%d/%m/%Y")
+                                    fecha_str = fecha_obj.strftime('%d/%m/%Y')
+                                except ValueError:
+                                    print("Formato de fecha no reconocido:", fecha_raw)
+                    except Exception as e:
+                        print("Error al procesar fecha:", fecha_raw, e)
                 except Exception as e:
                     print("Error al formatear fecha:", e)
                     fecha_str = "00/00/0000"
