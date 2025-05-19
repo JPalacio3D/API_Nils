@@ -581,11 +581,14 @@ def load(code):
                     continue  # Si no se encuentra la matrícula, continuar con el siguiente
 
                 matricula = result_matricula[0]
+                # Formateamos la fecha en formato dd/MM/yyyy para Unity
+                fecha_str = id['fecha'].strftime('%d/%m/%Y') if isinstance(id['fecha'], datetime.datetime) else str(id['fecha'])
+
                 datosCompletos = {
                     'id': id['id'],
                     'cliente': nombre_cliente,
                     'matricula': matricula,
-                    'fecha': id['fecha'],
+                    'fecha': fecha_str,
                     'descuento': id['descuento']
                 }
                 peritajesCompletos.append(datosCompletos)
