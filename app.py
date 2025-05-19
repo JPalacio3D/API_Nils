@@ -413,7 +413,7 @@ def save():
 
         # Si es app gratuita (por defecto o explícitamente)
         if app_key != 'PREMIUM-5678':
-            max_por_dia = 1  # límite configurable
+            max_por_dia = 15  # límite configurable
             creados = contar_peritajes_hoy(iduser, conexion)
             if creados >= max_por_dia:
                 return jsonify({
