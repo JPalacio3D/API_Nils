@@ -409,6 +409,7 @@ def save():
         cursor = conexion.cursor()
         iduser = request.form['iduser']
         app_key = request.headers.get('Z-APP-KEY', 'GRATIS-1234')  # valor por defecto: gratuita
+        fecha_creacion = datetime.datetime.now()
 
         # Si es app gratuita (por defecto o explícitamente)
         if app_key != 'PREMIUM-5678':
@@ -424,7 +425,7 @@ def save():
         VALUES ('{0}', '{1}', '{2}', '{3}')""".format(
             request.form['iduser'],
             request.form['idcliente'],
-            request.form['fecha'],
+            fecha_creacion,
             float(request.form['descuento']))
         cursor.execute(sql)
         conexion.commit()
