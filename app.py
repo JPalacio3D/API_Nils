@@ -695,7 +695,7 @@ def loadImpactos(code):
         return "error"
     finally:
         conexion.close()   
-@app.route('/buscarPeritaje/<code>',methods=['GET'])
+@app.route('/buscarPeritaje/<code>', methods=['GET'])
 def buscarPeritaje(code):
     conexion = conectar()
     try:
@@ -703,26 +703,27 @@ def buscarPeritaje(code):
         name = request.args.get('name')
         print(name)
         
-        sql="SELECT idClientes FROM Clientes WHERE iduser = '{0}' AND nombre = '{1}'".format(
-            code,
-            name
-        )
-        cursor.execute(sql)
+        # Obtener id del cliente
+        sql = "SELECT idClientes FROM Clientes WHERE iduser = %s AND nombre = %s"
+        cursor.execute(sql, (code, name))
         idcliente = cursor.fetchone()[0]
-        #print(f"ID: {idcliente}")
-        if idcliente != None:
-            sql="SELECT * FROM peritajes WHERE iduserP = '{0}' AND idcliente = '{1}'".format(
-                code,
-                idcliente
-            )
-            cursor.execute(sql)
+        
+        if idcliente is not None:
+            sql = "SELECT * FROM peritajes WHERE iduserP = %s AND idcliente = %s"
+            cursor.execute(sql, (code, idcliente))
             datos = cursor.fetchall()
-            print(f"Datos: {datos}")
-            peritajes=[]
-            peritajesCompletos=[]
-            if datos != None:
+
+            peritajes = []
+            peritajesCompletos = []
+
+            if datos is not None:
                 for fila in datos:
-                    datosPeritaje={'id':fila[0],'Cliente':fila[2],'fecha':fila[4],'descuento':fila[3]}
+                    datosPeritaje = {
+                        'id': fila[0],
+                        'Cliente': fila[2],
+                        'fecha': fila[4],
+                        'descuento': fila[3]
+                    }
                     peritajes.append(datosPeritaje)
                 
                 for id in peritajes:
@@ -730,9 +731,9 @@ def buscarPeritaje(code):
                     sql_cliente = "SELECT nombre FROM Clientes WHERE idClientes = %s"
                     cursor.execute(sql_cliente, (idCliente,))
                     result_cliente = cursor.fetchone()
-                
+                    
                     if result_cliente is None:
-                        continue  # Si no se encuentra el cliente, continuar con el siguiente
+                        continue
 
                     nombre_cliente = result_cliente[0]
                     idperitaje = id['id']
@@ -741,30 +742,51 @@ def buscarPeritaje(code):
                     result_matricula = cursor.fetchone()
 
                     if result_matricula is None:
-                        continue  # Si no se encuentra la matrícula, continuar con el siguiente
+                        continue
 
                     matricula = result_matricula[0]
+
+                    # 🔁 TRATAMIENTO DE FECHA
+                    fecha_raw = id['fecha']
+                    fecha_str = "00/00/0000"
+                    try:
+                        if isinstance(fecha_raw, datetime.datetime):
+                            fecha_str = fecha_raw.strftime('%d/%m/%Y')
+                        elif isinstance(fecha_raw, str):
+                            try:
+                                fecha_obj = datetime.datetime.fromisoformat(fecha_raw)
+                                fecha_str = fecha_obj.strftime('%d/%m/%Y')
+                            except ValueError:
+                                try:
+                                    fecha_obj = datetime.datetime.strptime(fecha_raw, "%d/%m/%Y")
+                                    fecha_str = fecha_obj.strftime('%d/%m/%Y')
+                                except ValueError:
+                                    print("Formato no reconocido:", fecha_raw)
+                    except Exception as e:
+                        print("Error al procesar fecha:", fecha_raw, e)
+
                     datosCompletos = {
                         'id': id['id'],
                         'cliente': nombre_cliente,
                         'matricula': matricula,
-                        'fecha': id['fecha'],
+                        'fecha': fecha_str,
                         'descuento': id['descuento']
                     }
                     peritajesCompletos.append(datosCompletos)
+
                 cursor.close()
-                return jsonify({'success':True,'datos':peritajesCompletos})
+                return jsonify({'success': True, 'datos': peritajesCompletos})
             else:
                 cursor.close()
-                return jsonify({'success': False, 'mensaje': "Nungun peritaje guardado con ese nombre"})
+                return jsonify({'success': False, 'mensaje': "Ningún peritaje guardado con ese nombre"})
         else:
             cursor.close()
-            return jsonify({'success': False, 'mensaje': "Nungun peritaje guardado con ese nombre"})
+            return jsonify({'success': False, 'mensaje': "Cliente no encontrado"})
     except Exception as ex:
         print(ex)
         return "error"
     finally:
-        conexion.close()   
+        conexion.close()
 
 @app.route('/añadirMarcaCoche',methods=['POST'])
 def añadirMarcaCoche():
