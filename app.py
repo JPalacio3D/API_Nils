@@ -582,7 +582,15 @@ def load(code):
 
                 matricula = result_matricula[0]
                 # Formateamos la fecha en formato dd/MM/yyyy para Unity
-                fecha_str = id['fecha'].strftime('%d/%m/%Y') if isinstance(id['fecha'], datetime.datetime) else str(id['fecha'])
+                try:
+                    fecha_obj = id['fecha']
+                    if isinstance(fecha_obj, str):
+                        # Intenta parsear si viene como string ISO (por ejemplo: '2025-05-19T12:00:00')
+                        fecha_obj = datetime.datetime.fromisoformat(fecha_obj)
+                    fecha_str = fecha_obj.strftime('%d/%m/%Y')
+                except Exception as e:
+                    print("Error al formatear fecha:", e)
+                    fecha_str = "00/00/0000"
 
                 datosCompletos = {
                     'id': id['id'],
