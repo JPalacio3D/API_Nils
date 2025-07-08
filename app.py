@@ -935,7 +935,7 @@ def deletePeritaje(code):
         
         cursor = conexion.cursor()
         sql = "DELETE FROM peritajes WHERE idperitajes = %s"
-        cursor.execute(sql, (code))
+        cursor.execute(sql, (code,))
         conexion.commit()
         return jsonify({'success': True, 'mensaje': "Peritaje eliminado"})
     except Exception as ex:
