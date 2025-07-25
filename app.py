@@ -928,7 +928,7 @@ def delete():
     except Exception as ex:
         print(ex)
         return jsonify({'success': False, 'mensaje': "No se ha podido eliminar la cuenta"})
-@app.route('/deletePeritaje/<code>',methods=['GET','POST'])
+@app.route('/deletePeritajes/<code>',methods=['GET','POST'])
 def deletePeritaje(code):
     conexion = conectar()
     try:
