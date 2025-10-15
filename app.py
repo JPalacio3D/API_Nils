@@ -34,6 +34,11 @@ def conectar():
         db=os.getenv('DB_NAME')
     )
 #conexion = conectar()
+# 1) HEALTH ultrarrápido (sin DB)
+@app.route("/health", methods=["GET", "HEAD"])
+def health():
+    # Comprobación mínima: responder 200 OK
+    return ("", 200)
 @app.route('/resetPass', methods=['POST','GET'])
 def resetPass():
     
