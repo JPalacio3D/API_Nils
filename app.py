@@ -656,27 +656,58 @@ def marcas():
         return "error"
     finally:
         conexion.close()   
-@app.route('/loadDatosCoche/<code>',methods=['GET'])
+        
+@app.route('/loadDatosCoche/<code>', methods=['GET'])
 def loadDatosCoche(code):
     conexion = conectar()
     try:
         cursor = conexion.cursor()
-        sql="SELECT * FROM coches_peritaje WHERE idperitaje = '{0}'".format(code)
-        cursor.execute(sql)
-        datos=cursor.fetchone()
 
-        if datos != None:
-            datosCoche = {'idCoche':datos[0],'idperitaje':datos[1],'marca':datos[2],'modelo':datos[3],'matricula':datos[4],'version':datos[5],'fecha':datos[6],'chasis':datos[7],'kms':datos[8],'color':datos[9],'aseguradora':datos[10]}
+        sql = """
+            SELECT 
+                c.idcochePeritaje,
+                c.idperitaje,
+                d.Marca,
+                c.modelo,
+                c.matricula,
+                c.version,
+                c.fecha_matriculacion,
+                c.N_chasis,
+                c.kms,
+                c.color,
+                c.aseguradora
+            FROM coches_peritaje c
+            JOIN DBcoches d ON c.idcoche = d.idDBcoches
+            WHERE c.idperitaje = %s
+        """
+        cursor.execute(sql, (code,))
+        datos = cursor.fetchone()
+
+        if datos:
+            datosCoche = {
+                'idCoche': datos[0],
+                'idperitaje': datos[1],
+                'marca': datos[2],  # ahora es el nombre, no el id
+                'modelo': datos[3],
+                'matricula': datos[4],
+                'version': datos[5],
+                'fecha': datos[6],
+                'chasis': datos[7],
+                'kms': datos[8],
+                'color': datos[9],
+                'aseguradora': datos[10]
+            }
             cursor.close()
-            return jsonify({'success':True,'datos':datosCoche,'mensaje':"Datos del coche cargados"})
+            return jsonify({'success': True, 'datos': datosCoche, 'mensaje': "Datos del coche cargados"})
         else:
             cursor.close()
-            return jsonify({'success':False,'mensaje':"Ningun coche guardado para este peritaje"})
+            return jsonify({'success': False, 'mensaje': "Ningún coche guardado para este peritaje"})
     except Exception as ex:
         print(ex)
-        return "error"
+        return jsonify({'success': False, 'mensaje': 'Error en el servidor'})
     finally:
-        conexion.close()   
+        conexion.close()
+
 @app.route('/loadImpactos/<code>',methods=['GET'])
 def loadImpactos(code):
     conexion = conectar()
