@@ -977,6 +977,33 @@ def deletePeritaje(code):
     except Exception as ex:
         print(ex)
         return jsonify({'success': False, 'mensaje': "No se ha podido eliminar el peritaje"})
+
+# GET: devolver notas
+@app.route('/peritajes/<int:idp>', methods=['GET'])
+def get_peritaje(idp):
+    con = conectar()
+    try:
+        cur = con.cursor(dictionary=True)
+        cur.execute("""SELECT idperitajes,iduserP,idcliente,descuento,fecha_creacion,notas
+                       FROM peritajes WHERE idperitajes=%s""", (idp,))
+        row = cur.fetchone()
+        return jsonify(success=bool(row), datos=row)
+    finally:
+        con.close()
+
+# PUT: actualizar notas
+@app.route('/peritajes/<int:idp>/notas', methods=['PUT'])
+def update_notas(idp):
+    data = request.get_json(force=True) or {}
+    notas = (data.get('notas') or '').strip()
+    con = conectar()
+    try:
+        cur = con.cursor()
+        cur.execute("UPDATE peritajes SET notas=%s WHERE idperitajes=%s", (notas, idp))
+        con.commit()
+        return jsonify(success=True, mensaje="Notas actualizadas")
+    finally:
+        con.close()
     
 def pagina_no_encontrada(error):
     return "<h1>La página no existe</h1>", 404
