@@ -19,9 +19,22 @@ from models.Security import Security
 #Entities
 from models.entities.User import User
 
-load_dotenv()
+load_dotenv('os.env')
 
 resend.api_key = os.getenv('RESEND_API_KEY')
+
+# Verificación de configuración
+print("="*50)
+print("🔧 VERIFICACIÓN DE CONFIGURACIÓN")
+print("="*50)
+
+if resend.api_key:
+    print(f"✓ RESEND_API_KEY configurada: {resend.api_key[:10]}...")
+else:
+    print("⚠️ ADVERTENCIA: RESEND_API_KEY NO CONFIGURADA")
+    print("   El envío de emails NO funcionará")
+
+print("="*50)
 
 app=Flask(__name__) #este parametro servira para saber si estamos ejecutando este archivo como principal
 #conexion=MySQL(app)
@@ -144,55 +157,363 @@ def cambiarPass(code):
 
 @app.route('/singin', methods=['POST'])   
 def singin():   
-    conexion = conectar()  
+    """
+    Endpoint mejorado para registro de usuarios
+    Validaciones completas y manejo de errores detallado
+    """
+    conexion = None
     cursor = None
+    
     try:
-         # Obtener datos del formulario
-        userName = request.form['userName']
-        password = request.form['password']
-        email = request.form['email']
-        isAdmin = request.form['IsAdmin']
+        # ═══════════════════════════════════════════════════
+        # 1. OBTENER Y LIMPIAR DATOS
+        # ═══════════════════════════════════════════════════
+        userName = request.form.get('userName', '').strip()
+        password = request.form.get('password', '')
+        email = request.form.get('email', '').strip().lower()
+        isAdmin = request.form.get('IsAdmin', 0)
         
-        # Validación del email
-        email_regex = r'^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$'
+        print(f"📝 Intento de registro: {userName} ({email})")
+        
+        # ═══════════════════════════════════════════════════
+        # 2. VALIDACIONES DE CAMPOS VACÍOS
+        # ═══════════════════════════════════════════════════
+        if not userName:
+            print("❌ Error: Username vacío")
+            return jsonify({
+                'success': False, 
+                'mensaje': 'El nombre de usuario es obligatorio'
+            }), 400
+            
+        if not password:
+            print("❌ Error: Password vacío")
+            return jsonify({
+                'success': False, 
+                'mensaje': 'La contraseña es obligatoria'
+            }), 400
+            
+        if not email:
+            print("❌ Error: Email vacío")
+            return jsonify({
+                'success': False, 
+                'mensaje': 'El email es obligatorio'
+            }), 400
+        
+        # ═══════════════════════════════════════════════════
+        # 3. VALIDACIÓN DEL USERNAME
+        # ═══════════════════════════════════════════════════
+        if len(userName) < 4:
+            print(f"❌ Error: Username muy corto ({len(userName)} caracteres)")
+            return jsonify({
+                'success': False, 
+                'mensaje': 'El nombre de usuario debe tener al menos 4 caracteres'
+            }), 400
+            
+        if len(userName) > 16:
+            print(f"❌ Error: Username muy largo ({len(userName)} caracteres)")
+            return jsonify({
+                'success': False, 
+                'mensaje': 'El nombre de usuario no puede tener más de 16 caracteres'
+            }), 400
+        
+        if not re.match(r'^[a-zA-Z0-9_]+$', userName):
+            print(f"❌ Error: Username con caracteres inválidos: {userName}")
+            return jsonify({
+                'success': False, 
+                'mensaje': 'El nombre de usuario solo puede contener letras, números y guiones bajos'
+            }), 400
+        
+        # ═══════════════════════════════════════════════════
+        # 4. VALIDACIÓN DEL EMAIL
+        # ═══════════════════════════════════════════════════
+        email_regex = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
         if not re.match(email_regex, email):
-            return jsonify({'success': False, 'mensaje': "Correo electrónico no válido"}), 400
+            print(f"❌ Error: Email con formato inválido: {email}")
+            return jsonify({
+                'success': False, 
+                'mensaje': 'El formato del email no es válido'
+            }), 400
         
-        # Encriptar la contraseña
-        hashed_password = generate_password_hash(password)
+        # ═══════════════════════════════════════════════════
+        # 5. VALIDACIÓN DE LA CONTRASEÑA
+        # ═══════════════════════════════════════════════════
+        if len(password) < 8:
+            print(f"❌ Error: Password muy corta ({len(password)} caracteres)")
+            return jsonify({
+                'success': False, 
+                'mensaje': 'La contraseña debe tener al menos 8 caracteres'
+            }), 400
         
+        if not re.search(r'[a-z]', password):
+            print("❌ Error: Password sin minúsculas")
+            return jsonify({
+                'success': False, 
+                'mensaje': 'La contraseña debe contener al menos una letra minúscula'
+            }), 400
+        
+        if not re.search(r'[A-Z]', password):
+            print("❌ Error: Password sin mayúsculas")
+            return jsonify({
+                'success': False, 
+                'mensaje': 'La contraseña debe contener al menos una letra mayúscula'
+            }), 400
+        
+        if not re.search(r'[0-9]', password):
+            print("❌ Error: Password sin números")
+            return jsonify({
+                'success': False, 
+                'mensaje': 'La contraseña debe contener al menos un número'
+            }), 400
+        
+        # ═══════════════════════════════════════════════════
+        # 6. CONECTAR A LA BASE DE DATOS
+        # ═══════════════════════════════════════════════════
+        conexion = conectar()
         cursor = conexion.cursor()
+        print("✓ Conexión a BD establecida")
+        
+        # ═══════════════════════════════════════════════════
+        # 7. VERIFICAR SI EL USERNAME YA EXISTE
+        # ═══════════════════════════════════════════════════
+        cursor.execute("SELECT idUser FROM User WHERE userName = %s", (userName,))
+        if cursor.fetchone():
+            print(f"❌ Error: Username duplicado: {userName}")
+            return jsonify({
+                'success': False, 
+                'mensaje': 'El nombre de usuario ya está registrado'
+            }), 409
+        
+        # ═══════════════════════════════════════════════════
+        # 8. VERIFICAR SI EL EMAIL YA EXISTE
+        # ═══════════════════════════════════════════════════
+        cursor.execute("SELECT idUser FROM User WHERE email = %s", (email,))
+        if cursor.fetchone():
+            print(f"❌ Error: Email duplicado: {email}")
+            return jsonify({
+                'success': False, 
+                'mensaje': 'El email ya está registrado'
+            }), 409
+        
+        # ═══════════════════════════════════════════════════
+        # 9. ENCRIPTAR CONTRASEÑA
+        # ═══════════════════════════════════════════════════
+        hashed_password = generate_password_hash(password)
+        print("✓ Contraseña encriptada")
+        
+        # ═══════════════════════════════════════════════════
+        # 10. INSERTAR USUARIO EN LA BASE DE DATOS
+        # ═══════════════════════════════════════════════════
         sql = """INSERT INTO User (userName, pasword, email, IsAdmin) 
                  VALUES (%s, %s, %s, %s)"""
         cursor.execute(sql, (userName, hashed_password, email, isAdmin))
-        conexion.commit()  # Confirmar la inserción
+        conexion.commit()
         
-        params: resend.Emails.SendParams = {
+        print(f"✓ Usuario registrado en BD: {userName} ({email})")
+        
+        # ═══════════════════════════════════════════════════
+        # 11. ENVIAR EMAIL DE BIENVENIDA
+        # ═══════════════════════════════════════════════════
+        try:
+            enviar_email_bienvenida(email, userName)
+            print(f"✓ Email de bienvenida enviado a: {email}")
+        except Exception as email_error:
+            print(f"⚠️ Error al enviar email: {email_error}")
+            # No bloqueamos el registro si falla el email
+        
+        # ═══════════════════════════════════════════════════
+        # 12. RESPUESTA EXITOSA
+        # ═══════════════════════════════════════════════════
+        return jsonify({
+            'success': True,
+            'mensaje': 'Cuenta creada correctamente. Revisa tu email para más información.'
+        }), 201
+        
+    except pymysql.Error as db_error:
+        print(f"❌ Error de base de datos: {db_error}")
+        if conexion:
+            conexion.rollback()
+        return jsonify({
+            'success': False,
+            'mensaje': 'Error al conectar con la base de datos'
+        }), 500
+        
+    except Exception as ex:
+        print(f"❌ Error inesperado: {ex}")
+        if conexion:
+            conexion.rollback()
+        return jsonify({
+            'success': False,
+            'mensaje': 'Error inesperado al crear la cuenta'
+        }), 500
+        
+    finally:
+        if cursor:
+            cursor.close()
+        if conexion:
+            conexion.close()
+            print("✓ Conexión cerrada")
+
+def enviar_email_bienvenida(email, userName):
+    """
+    Envía email de bienvenida profesional con HTML responsive
+    Args:
+        email (str): Email del destinatario
+        userName (str): Nombre de usuario registrado
+    """
+    try:
+        params = {
             "from": "PERI-CAR <onboarding@resend.dev>",
-            "to": [request.form['email']],
-            "subject": "Bienvenido a PERI-CAR",
-            "html": "<strong>Bienvenido a PERI-CAR!</br> Te has registrado correctamente, ya puedes disfrutar de nuestra APP.</strong>",
+            "to": [email],
+            "subject": "¡Bienvenido a PERI-CAR! 🚗",
+            "html": f"""
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <meta charset="UTF-8">
+                <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                <style>
+                    body {{
+                        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+                        background-color: #f4f4f4;
+                        margin: 0;
+                        padding: 0;
+                    }}
+                    .container {{
+                        max-width: 600px;
+                        margin: 40px auto;
+                        background-color: white;
+                        border-radius: 10px;
+                        overflow: hidden;
+                        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+                    }}
+                    .header {{
+                        background: linear-gradient(135deg, #4A5FD9 0%, #3645B8 100%);
+                        color: white;
+                        padding: 40px 20px;
+                        text-align: center;
+                    }}
+                    .header h1 {{
+                        margin: 0;
+                        font-size: 28px;
+                    }}
+                    .header p {{
+                        margin: 10px 0 0 0;
+                        font-size: 14px;
+                        opacity: 0.9;
+                    }}
+                    .content {{
+                        padding: 40px 30px;
+                    }}
+                    .content h2 {{
+                        color: #333;
+                        margin-top: 0;
+                    }}
+                    .content p {{
+                        color: #666;
+                        line-height: 1.6;
+                        font-size: 15px;
+                    }}
+                    .cta-button {{
+                        display: inline-block;
+                        background-color: #4A5FD9;
+                        color: white;
+                        text-decoration: none;
+                        padding: 14px 32px;
+                        border-radius: 6px;
+                        font-weight: bold;
+                        margin: 20px 0;
+                    }}
+                    .features {{
+                        background-color: #f9f9f9;
+                        padding: 20px;
+                        border-radius: 6px;
+                        margin: 20px 0;
+                    }}
+                    .features ul {{
+                        margin: 0;
+                        padding-left: 20px;
+                    }}
+                    .features li {{
+                        color: #666;
+                        margin: 8px 0;
+                    }}
+                    .footer {{
+                        background-color: #f4f4f4;
+                        padding: 20px;
+                        text-align: center;
+                        font-size: 12px;
+                        color: #999;
+                    }}
+                    .account-box {{
+                        background-color: #f0f4ff;
+                        border-left: 4px solid #4A5FD9;
+                        padding: 15px;
+                        margin: 20px 0;
+                    }}
+                    @media only screen and (max-width: 600px) {{
+                        .container {{
+                            margin: 0;
+                            border-radius: 0;
+                        }}
+                        .content {{
+                            padding: 30px 20px;
+                        }}
+                    }}
+                </style>
+            </head>
+            <body>
+                <div class="container">
+                    <div class="header">
+                        <h1>🚗 PERI-CAR</h1>
+                        <p>Gestión del Futuro</p>
+                    </div>
+                    
+                    <div class="content">
+                        <h2>¡Bienvenido, {userName}! 👋</h2>
+                        
+                        <p>Tu cuenta ha sido creada correctamente. Ya puedes empezar a utilizar <strong>PERI-CAR</strong> para gestionar tus peritajes de manera profesional.</p>
+                        
+                        <div class="features">
+                            <strong>Con PERI-CAR puedes:</strong>
+                            <ul>
+                                <li>📋 Crear y gestionar peritajes completos</li>
+                                <li>📸 Documentar daños con fotos de alta calidad</li>
+                                <li>📊 Generar informes profesionales en PDF</li>
+                                <li>☁️ Sincronizar tus datos en la nube</li>
+                                <li>👥 Gestionar múltiples clientes</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="account-box">
+                            <p style="margin: 0;"><strong>📌 Datos de tu cuenta:</strong></p>
+                            <p style="margin: 10px 0 0 0;">
+                                📧 Email: <strong>{email}</strong><br>
+                                👤 Usuario: <strong>{userName}</strong>
+                            </p>
+                        </div>
+                        
+                        <p style="margin-top: 30px; font-size: 13px; color: #999;">
+                            Si tienes alguna pregunta, no dudes en contactarnos respondiendo a este email.
+                        </p>
+                    </div>
+                    
+                    <div class="footer">
+                        <p style="margin: 0;"><strong>© 2025 PERI-CAR.</strong> Todos los derechos reservados.</p>
+                        <p style="margin: 10px 0 0 0;">Si no solicitaste esta cuenta, puedes ignorar este mensaje.</p>
+                    </div>
+                </div>
+            </body>
+            </html>
+            """
         }
         
         resend.Emails.send(params)
+        return True
         
-        return jsonify({'success':True,'mensaje':"Usuario registrado"})
-    except Exception as ex:
-        print("ex")
-        print(ex)
-        error_message = str(ex)
-        if 'Duplicate entry' in error_message and "for key 'User.userName_UNIQUE'" in error_message:
-            cursor.close()
-            return jsonify({'mensaje':"Nombre de usuario ya registrado",'error':str(ex)}),500
-        if 'Duplicate entry' in error_message and "for key 'User.email_UNIQUE'" in error_message:
-            cursor.close()
-            return jsonify({'mensaje':"Email ya registrado",'error':str(ex)}),500
-        else:
-            cursor.close()
-            return jsonify({'mensaje':"error en el registro",'error':str(ex)}),500
-    finally:
-        conexion.close()   
-
+    except Exception as e:
+        print(f"Error en enviar_email_bienvenida: {e}")
+        raise e
+    
 @app.route('/usuario',methods=['GET'])
 def usuario():
     conexion = conectar()
