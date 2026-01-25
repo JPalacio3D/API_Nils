@@ -355,14 +355,18 @@ def singin():
 
 def enviar_email_bienvenida(email, userName):
     """
-    Envía email de bienvenida profesional con HTML responsive
-    Args:
-        email (str): Email del destinatario
-        userName (str): Nombre de usuario registrado
+    Envía email de bienvenida usando dominio verificado
+    Dominio: imjpalacio.com
     """
     try:
+        print("="*50)
+        print(f"📧 ENVIANDO EMAIL DE BIENVENIDA")
+        print(f"   Destinatario: {email}")
+        print(f"   Usuario: {userName}")
+        print("="*50)
+        
         params = {
-            "from": "PERI-CAR <onboarding@resend.dev>",
+            "from": "PERI-CAR <noreply@imjpalacio.com>",  # 🔹 TU DOMINIO VERIFICADO
             "to": [email],
             "subject": "¡Bienvenido a PERI-CAR! 🚗",
             "html": f"""
@@ -437,18 +441,18 @@ def enviar_email_bienvenida(email, userName):
                         color: #666;
                         margin: 8px 0;
                     }}
+                    .account-box {{
+                        background-color: #f0f4ff;
+                        border-left: 4px solid #4A5FD9;
+                        padding: 15px;
+                        margin: 20px 0;
+                    }}
                     .footer {{
                         background-color: #f4f4f4;
                         padding: 20px;
                         text-align: center;
                         font-size: 12px;
                         color: #999;
-                    }}
-                    .account-box {{
-                        background-color: #f0f4ff;
-                        border-left: 4px solid #4A5FD9;
-                        padding: 15px;
-                        margin: 20px 0;
                     }}
                     @media only screen and (max-width: 600px) {{
                         .container {{
@@ -507,11 +511,22 @@ def enviar_email_bienvenida(email, userName):
             """
         }
         
-        resend.Emails.send(params)
+        print("📤 Llamando a Resend API...")
+        result = resend.Emails.send(params)
+        
+        print("✅ EMAIL ENVIADO EXITOSAMENTE")
+        print(f"   Email ID: {result.get('id', 'N/A')}")
+        print(f"   Destinatario: {email}")
+        print("="*50 + "\n")
+        
         return True
         
     except Exception as e:
-        print(f"Error en enviar_email_bienvenida: {e}")
+        print("="*50)
+        print(f"❌ ERROR AL ENVIAR EMAIL")
+        print(f"   Error: {e}")
+        print(f"   Tipo: {type(e).__name__}")
+        print("="*50 + "\n")
         raise e
     
 @app.route('/usuario',methods=['GET'])
