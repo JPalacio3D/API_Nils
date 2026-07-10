@@ -880,93 +880,71 @@ def update(code):
         return "error"
     finally:
         conexion.close()   
+# Formateamos la fecha en formato dd/MM/yyyy para Unity
+def formatear_fecha(fecha_raw):
+    fecha_str = "00/00/0000"
+    try:
+        if isinstance(fecha_raw, datetime.datetime):
+            fecha_str = fecha_raw.strftime('%d/%m/%Y')
+        elif isinstance(fecha_raw, str):
+            try:
+                # Intentar formato ISO: '2025-05-19T14:35:00'
+                fecha_obj = datetime.datetime.fromisoformat(fecha_raw)
+                fecha_str = fecha_obj.strftime('%d/%m/%Y')
+            except ValueError:
+                try:
+                    # Intentar formato antiguo: '19/05/2025'
+                    fecha_obj = datetime.datetime.strptime(fecha_raw, "%d/%m/%Y")
+                    fecha_str = fecha_obj.strftime('%d/%m/%Y')
+                except ValueError:
+                    print("Formato de fecha no reconocido:", fecha_raw)
+    except Exception as e:
+        print("Error al procesar fecha:", fecha_raw, e)
+    return fecha_str
+
 @app.route('/load/<code>',methods=['GET'])
 def load(code):
     conexion = conectar()
     try:
         cursor=conexion.cursor()
-        
+
         #añadimos argumento de limite (load/code?limit=x)
         limit = request.args.get('limit')
-        
-        sql="SELECT * FROM peritajes WHERE iduserP = '{0}'".format(code)
+
+        # Una sola consulta con JOIN (antes se hacian 2 consultas por peritaje
+        # y con muchos peritajes el servidor tardaba mas de 30s y Render cortaba con 502)
+        sql = ("SELECT p.idperitajes, c.nombre, cp.matricula, p.fecha_creacion, p.descuento "
+               "FROM peritajes p "
+               "JOIN Clientes c ON c.idClientes = p.idcliente "
+               "JOIN coches_peritaje cp ON cp.idperitaje = p.idperitajes "
+               "WHERE p.iduserP = %s "
+               "ORDER BY p.idperitajes")
+        params = [code]
         #añadimos el limite si esta el argumento
         if limit and limit.isdigit():
-            sql += " LIMIT '{0}'".format(limit)
-        
-        cursor.execute(sql)
+            sql += " LIMIT %s"
+            params.append(int(limit))
+
+        cursor.execute(sql, params)
         datos=cursor.fetchall()
-        peritajes=[]
         peritajesCompletos=[]
-        if datos != None:
-            for fila in datos:
-                datosPeritaje={'id':fila[0],'Cliente':fila[2],'descuento':fila[3],'fecha':fila[4]}
-                peritajes.append(datosPeritaje)
-            
-            for id in peritajes:
-                idCliente = id['Cliente']
-                sql_cliente = "SELECT nombre FROM Clientes WHERE idClientes = %s"
-                cursor.execute(sql_cliente, (idCliente,))
-                result_cliente = cursor.fetchone()
-                
-                if result_cliente is None:
-                    continue  # Si no se encuentra el cliente, continuar con el siguiente
-
-                nombre_cliente = result_cliente[0]
-                idperitaje = id['id']
-                sql_matricula = "SELECT matricula FROM coches_peritaje WHERE idperitaje = %s"
-                cursor.execute(sql_matricula, (idperitaje,))
-                result_matricula = cursor.fetchone()
-
-                if result_matricula is None:
-                    continue  # Si no se encuentra la matrícula, continuar con el siguiente
-
-                matricula = result_matricula[0]
-                # Formateamos la fecha en formato dd/MM/yyyy para Unity
-                try:
-                    fecha_raw = id['fecha']
-                    fecha_str = "00/00/0000"
-
-                    try:
-                        if isinstance(fecha_raw, datetime.datetime):
-                            fecha_str = fecha_raw.strftime('%d/%m/%Y')
-                        elif isinstance(fecha_raw, str):
-                            try:
-                                # Intentar formato ISO: '2025-05-19T14:35:00'
-                                fecha_obj = datetime.datetime.fromisoformat(fecha_raw)
-                                fecha_str = fecha_obj.strftime('%d/%m/%Y')
-                            except ValueError:
-                                try:
-                                    # Intentar formato antiguo: '19/05/2025'
-                                    fecha_obj = datetime.datetime.strptime(fecha_raw, "%d/%m/%Y")
-                                    fecha_str = fecha_obj.strftime('%d/%m/%Y')
-                                except ValueError:
-                                    print("Formato de fecha no reconocido:", fecha_raw)
-                    except Exception as e:
-                        print("Error al procesar fecha:", fecha_raw, e)
-                except Exception as e:
-                    print("Error al formatear fecha:", e)
-                    fecha_str = "00/00/0000"
-
-                datosCompletos = {
-                    'id': id['id'],
-                    'cliente': nombre_cliente,
-                    'matricula': matricula,
-                    'fecha': fecha_str,
-                    'descuento': id['descuento']
-                }
-                peritajesCompletos.append(datosCompletos)
-            cursor.close()
-            return jsonify({'success':True,'datos':peritajesCompletos})
-        else:
-            cursor.close()
-            return jsonify({'success':False,'mensaje':"Ningun peritaje guardado"})
+        for fila in datos:
+            datosCompletos = {
+                'id': fila[0],
+                'cliente': fila[1],
+                'matricula': fila[2],
+                'fecha': formatear_fecha(fila[3]),
+                'descuento': fila[4]
+            }
+            peritajesCompletos.append(datosCompletos)
+        cursor.close()
+        return jsonify({'success':True,'datos':peritajesCompletos})
     except Exception as ex:
         print(ex)
         return "error"
     finally:
-        conexion.close()   
-    
+        conexion.close()
+
 @app.route('/marcasCoche',methods=['GET'])
 def marcas():
     conexion = conectar()
@@ -1074,86 +1052,37 @@ def buscarPeritaje(code):
         cursor = conexion.cursor()
         name = request.args.get('name')
         print(name)
-        
-        # Obtener id del cliente
-        sql = "SELECT idClientes FROM Clientes WHERE iduser = %s AND nombre = %s"
-        cursor.execute(sql, (code, name))
-        idcliente = cursor.fetchone()[0]
-        
-        if idcliente is not None:
-            sql = "SELECT * FROM peritajes WHERE iduserP = %s AND idcliente = %s"
-            cursor.execute(sql, (code, idcliente))
-            datos = cursor.fetchall()
 
-            peritajes = []
-            peritajesCompletos = []
+        if not name:
+            return jsonify({'success': False, 'mensaje': "Busqueda vacia"})
 
-            if datos is not None:
-                for fila in datos:
-                    datosPeritaje = {
-                        'id': fila[0],
-                        'Cliente': fila[2],
-                        'fecha': fila[4],
-                        'descuento': fila[3]
-                    }
-                    peritajes.append(datosPeritaje)
-                
-                for id in peritajes:
-                    idCliente = id['Cliente']
-                    sql_cliente = "SELECT nombre FROM Clientes WHERE idClientes = %s"
-                    cursor.execute(sql_cliente, (idCliente,))
-                    result_cliente = cursor.fetchone()
-                    
-                    if result_cliente is None:
-                        continue
+        # Busqueda parcial por nombre de cliente O matricula, en una sola consulta.
+        # Antes se exigia el nombre exacto del cliente y si no coincidia el
+        # servidor petaba (fetchone()[0] sobre None) y devolvia "error".
+        sql = ("SELECT p.idperitajes, c.nombre, cp.matricula, p.fecha_creacion, p.descuento "
+               "FROM peritajes p "
+               "JOIN Clientes c ON c.idClientes = p.idcliente "
+               "JOIN coches_peritaje cp ON cp.idperitaje = p.idperitajes "
+               "WHERE p.iduserP = %s AND (c.nombre LIKE %s OR cp.matricula LIKE %s) "
+               "ORDER BY p.idperitajes")
+        patron = "%" + name + "%"
+        cursor.execute(sql, (code, patron, patron))
+        datos = cursor.fetchall()
 
-                    nombre_cliente = result_cliente[0]
-                    idperitaje = id['id']
-                    sql_matricula = "SELECT matricula FROM coches_peritaje WHERE idperitaje = %s"
-                    cursor.execute(sql_matricula, (idperitaje,))
-                    result_matricula = cursor.fetchone()
+        peritajesCompletos = []
+        for fila in datos:
+            datosCompletos = {
+                'id': fila[0],
+                'cliente': fila[1],
+                'matricula': fila[2],
+                'fecha': formatear_fecha(fila[3]),
+                'descuento': fila[4]
+            }
+            peritajesCompletos.append(datosCompletos)
 
-                    if result_matricula is None:
-                        continue
-
-                    matricula = result_matricula[0]
-
-                    # 🔁 TRATAMIENTO DE FECHA
-                    fecha_raw = id['fecha']
-                    fecha_str = "00/00/0000"
-                    try:
-                        if isinstance(fecha_raw, datetime.datetime):
-                            fecha_str = fecha_raw.strftime('%d/%m/%Y')
-                        elif isinstance(fecha_raw, str):
-                            try:
-                                fecha_obj = datetime.datetime.fromisoformat(fecha_raw)
-                                fecha_str = fecha_obj.strftime('%d/%m/%Y')
-                            except ValueError:
-                                try:
-                                    fecha_obj = datetime.datetime.strptime(fecha_raw, "%d/%m/%Y")
-                                    fecha_str = fecha_obj.strftime('%d/%m/%Y')
-                                except ValueError:
-                                    print("Formato no reconocido:", fecha_raw)
-                    except Exception as e:
-                        print("Error al procesar fecha:", fecha_raw, e)
-
-                    datosCompletos = {
-                        'id': id['id'],
-                        'cliente': nombre_cliente,
-                        'matricula': matricula,
-                        'fecha': fecha_str,
-                        'descuento': id['descuento']
-                    }
-                    peritajesCompletos.append(datosCompletos)
-
-                cursor.close()
-                return jsonify({'success': True, 'datos': peritajesCompletos})
-            else:
-                cursor.close()
-                return jsonify({'success': False, 'mensaje': "Ningún peritaje guardado con ese nombre"})
-        else:
-            cursor.close()
-            return jsonify({'success': False, 'mensaje': "Cliente no encontrado"})
+        cursor.close()
+        # Si no hay coincidencias devolvemos lista vacia (la app limpia el listado)
+        return jsonify({'success': True, 'datos': peritajesCompletos})
     except Exception as ex:
         print(ex)
         return "error"
