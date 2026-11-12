@@ -10,6 +10,8 @@ import resend
 import os
 import requests
 import re
+import hashlib
+import secrets
 #from src.database.db import get_connection
 
 #Models
@@ -47,6 +49,50 @@ def conectar():
         db=os.getenv('DB_NAME')
     )
 #conexion = conectar()
+
+# ---------------------------------------------------------------
+# Sesiones "Recordarme": token aleatorio de larga duración. En la
+# base de datos solo se guarda su hash, nunca el token ni la contraseña.
+# ---------------------------------------------------------------
+DIAS_SESION = 90
+
+def _hash_token(token):
+    return hashlib.sha256(token.encode('utf-8')).hexdigest()
+
+def crear_sesion(conexion, id_user):
+    """Crea una sesión para el usuario y devuelve el token en claro (solo se entrega una vez)."""
+    token = secrets.token_urlsafe(32)
+    expira = datetime.datetime.now() + datetime.timedelta(days=DIAS_SESION)
+    cursor = conexion.cursor()
+    cursor.execute("DELETE FROM sesiones WHERE expira < %s", (datetime.datetime.now(),))
+    cursor.execute("INSERT INTO sesiones (idUser, token_hash, creado, expira) VALUES (%s, %s, %s, %s)",
+                   (id_user, _hash_token(token), datetime.datetime.now(), expira))
+    conexion.commit()
+    cursor.close()
+    return token
+
+def _numero_o_none(valor):
+    """Convierte un texto con punto o coma decimal en float; None si está vacío o no es un número."""
+    if valor is None:
+        return None
+    try:
+        return float(str(valor).strip().replace(',', '.'))
+    except ValueError:
+        return None
+
+def guardar_extras_peritaje(conexion, id_peritaje, form):
+    """Complementos (JSON) y total del presupuesto. Son opcionales: las versiones
+    anteriores de la app no los envían y el peritaje se guarda igualmente."""
+    if 'complementos' not in form and 'total' not in form:
+        return
+    try:
+        cursor = conexion.cursor()
+        cursor.execute("UPDATE peritajes SET complementos = %s, total = %s WHERE idperitajes = %s",
+                       (form.get('complementos'), _numero_o_none(form.get('total')), id_peritaje))
+        conexion.commit()
+        cursor.close()
+    except Exception as ex:
+        print("No se pudieron guardar complementos/total:", ex)
 # 1) HEALTH ultrarrápido (sin DB)
 @app.route("/health", methods=["GET", "HEAD"])
 def health():
@@ -123,7 +169,14 @@ def login():
                     'email': logged_user.email,
                     'IsAdmin': logged_user.IsAdmin
                 }
-                return jsonify({'success': True, 'token': encoded_token, 'mensaje': "Logueado correctamente", 'data': data})
+                respuesta = {'success': True, 'token': encoded_token, 'mensaje': "Logueado correctamente", 'data': data}
+                # "Recordarme": se entrega un token de sesión para no guardar la contraseña en el dispositivo
+                if request.form.get('recordar') == '1':
+                    try:
+                        respuesta['sesion'] = crear_sesion(conexion, logged_user.idUser)
+                    except Exception as ex:
+                        print("No se pudo crear la sesión:", ex)
+                return jsonify(respuesta)
             else:
                 return jsonify({'success': False, 'mensaje': "Contraseña inválida"})
         else:
@@ -133,6 +186,51 @@ def login():
         return jsonify({'success':False,'mensaje':"Error de servidor"}), 500
     finally:
         conexion.close()   
+
+@app.route('/loginToken', methods=['POST'])
+def loginToken():
+    """Acceso con el token de sesión de "Recordarme" (sin contraseña)."""
+    conexion = conectar()
+    try:
+        identifier = request.form['username']
+        token = request.form['token']
+        cursor = conexion.cursor()
+        cursor.execute("""SELECT u.idUser, u.userName, u.email, u.IsAdmin, s.id
+                          FROM sesiones s JOIN User u ON u.idUser = s.idUser
+                          WHERE s.token_hash = %s AND s.expira > %s AND (u.userName = %s OR u.email = %s)""",
+                       (_hash_token(token), datetime.datetime.now(), identifier, identifier))
+        fila = cursor.fetchone()
+        if not fila:
+            cursor.close()
+            return jsonify({'success': False, 'mensaje': "Sesión caducada"})
+        # Cada uso renueva la caducidad
+        cursor.execute("UPDATE sesiones SET expira = %s WHERE id = %s",
+                       (datetime.datetime.now() + datetime.timedelta(days=DIAS_SESION), fila[4]))
+        conexion.commit()
+        cursor.close()
+        data = {'id': fila[0], 'username': fila[1], 'email': fila[2], 'IsAdmin': fila[3]}
+        return jsonify({'success': True, 'mensaje': "Logueado correctamente", 'data': data})
+    except Exception as ex:
+        print(ex)
+        return jsonify({'success': False, 'mensaje': "Error de servidor"}), 500
+    finally:
+        conexion.close()
+
+@app.route('/logoutToken', methods=['POST'])
+def logoutToken():
+    """Revoca el token de sesión al cerrar sesión en la app."""
+    conexion = conectar()
+    try:
+        cursor = conexion.cursor()
+        cursor.execute("DELETE FROM sesiones WHERE token_hash = %s", (_hash_token(request.form['token']),))
+        conexion.commit()
+        cursor.close()
+        return jsonify({'success': True, 'mensaje': "Sesión cerrada"})
+    except Exception as ex:
+        print(ex)
+        return jsonify({'success': False, 'mensaje': "Error de servidor"}), 500
+    finally:
+        conexion.close()
 
 @app.route('/cambiarPass/<code>',methods=['POST'])
 def cambiarPass(code):
@@ -790,6 +888,7 @@ def save():
         cursor.execute(sql)
         conexion.commit()
         cursor.close()
+        guardar_extras_peritaje(conexion, id_peritaje, request.form)
         return jsonify({'success': True,'mensaje':"ficha y coche creados",'idPeritaje':id_peritaje})       
     except Exception as ex:
         print(ex)
@@ -837,6 +936,16 @@ def saveImpactos():
             )
         cursor.execute(sql)
         conexion.commit()
+        # Campos nuevos y opcionales: elemento a reemplazar y precio del elemento
+        if 'reemplazar' in request.form or 'precio' in request.form:
+            try:
+                cursor.execute("UPDATE Impactos SET reemplazar = %s, precio = %s WHERE peritajesId = %s AND zona = %s",
+                               (1 if request.form.get('reemplazar') == '1' else 0,
+                                _numero_o_none(request.form.get('precio')),
+                                request.form['idperitaje'], request.form['zona']))
+                conexion.commit()
+            except Exception as ex:
+                print("No se pudieron guardar reemplazar/precio:", ex)
         cursor.close()
         return jsonify({'success': True,'mensaje':"Impactos guardados"})        
     except Exception as ex:
@@ -874,6 +983,7 @@ def update(code):
         cursor.execute(sql)
         conexion.commit()
         cursor.close()
+        guardar_extras_peritaje(conexion, code, request.form)
         return jsonify({'success':True,'mensaje':"fecha y coche actualizados"})
     except Exception as ex:
         print(ex)
@@ -1011,6 +1121,15 @@ def loadDatosCoche(code):
                 'color': datos[9],
                 'aseguradora': datos[10]
             }
+            # Complementos y total (vacíos en los peritajes anteriores a este cambio)
+            try:
+                cursor.execute("SELECT complementos, total FROM peritajes WHERE idperitajes = %s", (code,))
+                extra = cursor.fetchone()
+                if extra:
+                    datosCoche['complementos'] = extra[0]
+                    datosCoche['total'] = float(extra[1]) if extra[1] is not None else None
+            except Exception as ex:
+                print("No se pudieron leer complementos/total:", ex)
             cursor.close()
             return jsonify({'success': True, 'datos': datosCoche, 'mensaje': "Datos del coche cargados"})
         else:
@@ -1035,6 +1154,17 @@ def loadImpactos(code):
             for fila in datos:
                 datosImpacto = {'zona':fila[2],'peq':fila[3],'med':fila[4],'grd':fila[5],'mgrd':fila[6],'reparacion':fila[7],'material':fila[8],'posibledpp':fila[9]}
                 impactos.append(datosImpacto)
+            # Campos nuevos (vacíos en los peritajes anteriores a este cambio)
+            try:
+                cursor.execute("SELECT zona, reemplazar, precio FROM Impactos WHERE peritajesId = %s", (code,))
+                extras = {f[0]: f for f in cursor.fetchall()}
+                for imp in impactos:
+                    f = extras.get(imp['zona'])
+                    if f:
+                        imp['reemplazar'] = int(f[1] or 0)
+                        imp['precio'] = float(f[2]) if f[2] is not None else None
+            except Exception as ex:
+                print("No se pudieron leer reemplazar/precio:", ex)
             cursor.close()
             return jsonify({'success':True,'datos':impactos,'mensaje':"Impactos cargados"})
         else:
