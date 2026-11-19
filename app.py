@@ -71,6 +71,17 @@ def crear_sesion(conexion, id_user):
     cursor.close()
     return token
 
+def registrar_acceso(conexion, id_user):
+    """Anota la última vez que el usuario usó la app. Nunca debe romper la petición que lo llama."""
+    try:
+        cursor = conexion.cursor()
+        cursor.execute("UPDATE User SET ultimo_acceso = %s WHERE idUser = %s",
+                       (datetime.datetime.now(), id_user))
+        conexion.commit()
+        cursor.close()
+    except Exception as ex:
+        print("No se pudo registrar el acceso:", ex)
+
 def _numero_o_none(valor):
     """Convierte un texto con punto o coma decimal en float; None si está vacío o no es un número."""
     if valor is None:
@@ -162,6 +173,7 @@ def login():
             logged_user = ModelUser.login(conexion, user)
 
             if logged_user and logged_user.pasword:
+                registrar_acceso(conexion, logged_user.idUser)
                 encoded_token = Security.generate_token(logged_user)
                 data = {
                     'id': logged_user.idUser,
@@ -208,6 +220,7 @@ def loginToken():
                        (datetime.datetime.now() + datetime.timedelta(days=DIAS_SESION), fila[4]))
         conexion.commit()
         cursor.close()
+        registrar_acceso(conexion, fila[0])
         data = {'id': fila[0], 'username': fila[1], 'email': fila[2], 'IsAdmin': fila[3]}
         return jsonify({'success': True, 'mensaje': "Logueado correctamente", 'data': data})
     except Exception as ex:
@@ -401,9 +414,9 @@ def singin():
         # ═══════════════════════════════════════════════════
         # 10. INSERTAR USUARIO EN LA BASE DE DATOS
         # ═══════════════════════════════════════════════════
-        sql = """INSERT INTO User (userName, pasword, email, IsAdmin) 
-                 VALUES (%s, %s, %s, %s)"""
-        cursor.execute(sql, (userName, hashed_password, email, isAdmin))
+        sql = """INSERT INTO User (userName, pasword, email, IsAdmin, fecha_alta)
+                 VALUES (%s, %s, %s, %s, %s)"""
+        cursor.execute(sql, (userName, hashed_password, email, isAdmin, datetime.datetime.now()))
         conexion.commit()
         
         print(f"✓ Usuario registrado en BD: {userName} ({email})")
@@ -868,6 +881,7 @@ def save():
             float(request.form['descuento']))
         cursor.execute(sql)
         conexion.commit()
+        registrar_acceso(conexion, iduser)
         # Obtienes el ID del último registro insertado
         cursor.execute("SELECT LAST_INSERT_ID()")
         id_peritaje = cursor.fetchone()[0]
@@ -1348,6 +1362,8 @@ def delete():
             if logged_user.pasword:  # Verificamos la contraseña
                 # Procedemos con la eliminación de la cuenta
                 cursor = conexion.cursor()
+                # Las sesiones no tienen clave foránea: no se borran en cascada
+                cursor.execute("DELETE FROM sesiones WHERE idUser = %s", (logged_user.idUser,))
                 sql = "DELETE FROM User WHERE idUser = %s"
                 cursor.execute(sql, (logged_user.idUser,))
                 conexion.commit()
